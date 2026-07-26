@@ -57,3 +57,12 @@ export async function resetPasswordHandler(req: Request, res: Response, next: Ne
     next(err);
   }
 }
+
+export async function verifyEmailHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    await authService.verifyEmail(req.body.token);
+    res.status(200).json({ message: 'Email verified' });
+  } catch (err) {
+    next(err);
+  }
+}

@@ -139,3 +139,17 @@ export async function resetPassword(input: { token: string; newPassword: string 
   record.used = true;
   await record.save();
 }
+
+export async function verifyEmail(token: string): Promise<void> {
+  const tokenHash = hashToken(token);
+  const record = await EmailVerificationToken.findOne({ tokenHash });
+  if (!record || record.used || record.expiresAt.getTime() < Date.now()) {
+    throw new UnauthorizedError('Invalid or expired verification token');
+  }
+  const user = await User.findById(record.userId);
+  if (!user) throw new NotFoundError('User not found');
+  user.status = 'active';
+  await user.save();
+  record.used = true;
+  await record.save();
+}

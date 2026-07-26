@@ -8,6 +8,7 @@ import {
   logoutSchema,
   forgotPasswordSchema,
   resetPasswordSchema,
+  verifyEmailSchema,
 } from './auth.validators';
 import {
   registerHandler,
@@ -16,6 +17,7 @@ import {
   logoutHandler,
   forgotPasswordHandler,
   resetPasswordHandler,
+  verifyEmailHandler,
 } from './auth.controller';
 
 export const authRouter = Router();
@@ -31,3 +33,4 @@ authRouter.post(
   forgotPasswordHandler
 );
 authRouter.post('/reset-password', validateBody(resetPasswordSchema), resetPasswordHandler);
+authRouter.post('/verify-email', validateBody(verifyEmailSchema), verifyEmailHandler);
