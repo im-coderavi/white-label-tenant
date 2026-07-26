@@ -39,3 +39,21 @@ export async function logoutHandler(req: Request, res: Response, next: NextFunct
     next(err);
   }
 }
+
+export async function forgotPasswordHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    await authService.forgotPassword(req.body);
+    res.status(200).json({ message: 'If the account exists, a reset email has been sent' });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function resetPasswordHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    await authService.resetPassword(req.body);
+    res.status(200).json({ message: 'Password reset successful' });
+  } catch (err) {
+    next(err);
+  }
+}

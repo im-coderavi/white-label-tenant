@@ -2,6 +2,7 @@ import { Types } from 'mongoose';
 import { User, UserDocument } from '../../models/User';
 import { Tenant } from '../../models/Tenant';
 import { EmailVerificationToken } from '../../models/EmailVerificationToken';
+import { PasswordResetToken } from '../../models/PasswordResetToken';
 import { RefreshToken } from '../../models/RefreshToken';
 import { hashPassword, comparePassword } from '../../common/password';
 import { generateOpaqueToken, hashToken } from '../../common/token';
@@ -12,6 +13,7 @@ import { env } from '../../config/env';
 
 const VERIFY_TTL_MS = 24 * 60 * 60 * 1000;
 const REFRESH_TTL_MS = env.REFRESH_TOKEN_TTL_DAYS * 24 * 60 * 60 * 1000;
+const RESET_TTL_MS = 60 * 60 * 1000;
 
 export async function register(input: {
   tenantSubdomain: string;
@@ -107,4 +109,33 @@ export async function refresh(rawRefreshToken: string): Promise<TokenPair> {
 export async function logout(rawRefreshToken: string): Promise<void> {
   const tokenHash = hashToken(rawRefreshToken);
   await RefreshToken.updateOne({ tokenHash }, { revoked: true });
+}
+
+export async function forgotPassword(input: { email: string; tenantSubdomain: string }): Promise<void> {
+  const tenant = await Tenant.findOne({ subdomain: input.tenantSubdomain.toLowerCase() });
+  if (!tenant) return;
+  const user = await User.findOne({ tenantId: tenant._id, email: input.email.toLowerCase() });
+  if (!user) return;
+  const rawToken = generateOpaqueToken();
+  await PasswordResetToken.create({
+    userId: user._id,
+    tokenHash: hashToken(rawToken),
+    expiresAt: new Date(Date.now() + RESET_TTL_MS),
+    used: false,
+  });
+  await consoleEmailService.sendEmail(user.email, 'reset-password', { token: rawToken });
+}
+
+export async function resetPassword(input: { token: string; newPassword: string }): Promise<void> {
+  const tokenHash = hashToken(input.token);
+  const record = await PasswordResetToken.findOne({ tokenHash });
+  if (!record || record.used || record.expiresAt.getTime() < Date.now()) {
+    throw new UnauthorizedError('Invalid or expired reset token');
+  }
+  const user = await User.findById(record.userId);
+  if (!user) throw new NotFoundError('User not found');
+  user.passwordHash = await hashPassword(input.newPassword);
+  await user.save();
+  record.used = true;
+  await record.save();
 }
