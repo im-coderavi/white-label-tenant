@@ -90,3 +90,21 @@ export async function login(input: {
   const tokens = await issueTokenPair(user);
   return { user, tokens };
 }
+
+export async function refresh(rawRefreshToken: string): Promise<TokenPair> {
+  const tokenHash = hashToken(rawRefreshToken);
+  const stored = await RefreshToken.findOne({ tokenHash });
+  if (!stored || stored.revoked || stored.expiresAt.getTime() < Date.now()) {
+    throw new UnauthorizedError('Invalid or expired refresh token');
+  }
+  stored.revoked = true;
+  await stored.save();
+  const user = await User.findById(stored.userId);
+  if (!user) throw new UnauthorizedError('Invalid refresh token');
+  return issueTokenPair(user);
+}
+
+export async function logout(rawRefreshToken: string): Promise<void> {
+  const tokenHash = hashToken(rawRefreshToken);
+  await RefreshToken.updateOne({ tokenHash }, { revoked: true });
+}
