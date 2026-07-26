@@ -153,3 +153,9 @@ export async function verifyEmail(token: string): Promise<void> {
   record.used = true;
   await record.save();
 }
+
+export async function getMe(userId: string): Promise<UserDocument> {
+  const user = await User.findById(userId).select('-passwordHash');
+  if (!user) throw new NotFoundError('User not found');
+  return user;
+}

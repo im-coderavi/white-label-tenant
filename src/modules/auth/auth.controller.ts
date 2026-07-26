@@ -66,3 +66,12 @@ export async function verifyEmailHandler(req: Request, res: Response, next: Next
     next(err);
   }
 }
+
+export async function meHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const user = await authService.getMe(req.user!.id);
+    res.status(200).json({ user });
+  } catch (err) {
+    next(err);
+  }
+}

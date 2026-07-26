@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { validateBody } from '../../middleware/validate.middleware';
 import { authRateLimiter } from '../../middleware/rateLimit.middleware';
+import { requireAuth } from '../../middleware/auth.middleware';
 import {
   registerSchema,
   loginSchema,
@@ -18,6 +19,7 @@ import {
   forgotPasswordHandler,
   resetPasswordHandler,
   verifyEmailHandler,
+  meHandler,
 } from './auth.controller';
 
 export const authRouter = Router();
@@ -34,3 +36,4 @@ authRouter.post(
 );
 authRouter.post('/reset-password', validateBody(resetPasswordSchema), resetPasswordHandler);
 authRouter.post('/verify-email', validateBody(verifyEmailSchema), verifyEmailHandler);
+authRouter.get('/me', requireAuth, meHandler);

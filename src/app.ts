@@ -1,4 +1,8 @@
 import express, { Express } from 'express';
+import { authRouter } from './modules/auth/auth.routes';
+import { tenantsRouter } from './modules/tenants/tenants.routes';
+import { usersRouter } from './modules/users/users.routes';
+import { errorMiddleware } from './middleware/error.middleware';
 
 export function createApp(): Express {
   const app = express();
@@ -8,5 +12,10 @@ export function createApp(): Express {
     res.status(200).json({ status: 'ok' });
   });
 
+  app.use('/api/v1/auth', authRouter);
+  app.use('/api/v1/tenants', tenantsRouter);
+  app.use('/api/v1/users', usersRouter);
+
+  app.use(errorMiddleware);
   return app;
 }

@@ -1,9 +1,17 @@
 import { createApp } from './app';
+import { connectDb } from './config/db';
+import { env } from './config/env';
+import { logger } from './common/logger';
 
-const PORT = Number(process.env.PORT) || 4000;
+async function main(): Promise<void> {
+  await connectDb();
+  const app = createApp();
+  app.listen(env.PORT, () => {
+    logger.info(`Server listening on port ${env.PORT}`);
+  });
+}
 
-const app = createApp();
-app.listen(PORT, () => {
-  // eslint-disable-next-line no-console
-  console.log(`Server listening on port ${PORT}`);
+main().catch((err) => {
+  logger.error('Failed to start server', { error: err instanceof Error ? err.stack : err });
+  process.exit(1);
 });
