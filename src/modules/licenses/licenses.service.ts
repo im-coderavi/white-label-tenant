@@ -1,6 +1,6 @@
 import { License, LicenseDocument } from '../../models/License';
 import { generateLicenseKey } from '../../common/licenseKey';
-import { ConflictError } from '../../common/errors';
+import { ConflictError, NotFoundError } from '../../common/errors';
 
 async function generateUniqueLicenseKey(): Promise<string> {
   let key = generateLicenseKey();
@@ -76,4 +76,17 @@ export async function importLicenses(input: {
     input.keys.map((key) => ({ productId: input.productId, key, status: 'available' }))
   );
   return docs as unknown as LicenseDocument[];
+}
+
+export async function getLicenseById(id: string): Promise<LicenseDocument> {
+  const license = await License.findById(id);
+  if (!license) throw new NotFoundError('License not found');
+  return license;
+}
+
+export async function revokeLicense(id: string): Promise<LicenseDocument> {
+  const license = await getLicenseById(id);
+  license.status = 'revoked';
+  await license.save();
+  return license;
 }

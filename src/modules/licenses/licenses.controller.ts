@@ -29,3 +29,12 @@ export async function importLicensesHandler(req: Request, res: Response, next: N
     next(err);
   }
 }
+
+export async function revokeLicenseHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const license = await licensesService.revokeLicense(req.params.id);
+    res.status(200).json({ license });
+  } catch (err) {
+    next(err);
+  }
+}
