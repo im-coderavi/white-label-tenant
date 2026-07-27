@@ -83,3 +83,12 @@ export async function updateSyncModeHandler(req: Request, res: Response, next: N
     next(err);
   }
 }
+
+export async function forceSyncHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const product = await productsService.forceSync(req.params.id);
+    res.status(200).json({ product });
+  } catch (err) {
+    next(err);
+  }
+}

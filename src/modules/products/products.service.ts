@@ -201,3 +201,9 @@ export async function syncProductToTenants(product: ProductDocument): Promise<vo
 
   // 'optional' mode — no-op, resellers opt in manually (future sub-project)
 }
+
+export async function forceSync(id: string): Promise<ProductDocument> {
+  const product = await getProductById(id);
+  await syncProductToTenants(product);
+  return product;
+}

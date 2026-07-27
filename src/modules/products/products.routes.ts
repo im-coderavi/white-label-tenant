@@ -20,6 +20,7 @@ import {
   addVersionHandler,
   listVersionsHandler,
   updateSyncModeHandler,
+  forceSyncHandler,
 } from './products.controller';
 
 export const productsRouter = Router();
@@ -44,3 +45,4 @@ productsRouter.patch(
   validateBody(syncModeSchema),
   updateSyncModeHandler
 );
+productsRouter.post('/:id/sync', forceSyncHandler);
