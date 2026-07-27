@@ -1,4 +1,4 @@
-import { Schema, model, Document } from 'mongoose';
+import { Schema, model, Document, Types } from 'mongoose';
 
 export type ProductType =
   | 'software'
@@ -29,6 +29,7 @@ export interface ProductDocument extends Document {
   thumbnailUrl: string | null;
   thumbnailPublicId: string | null;
   syncMode: ProductSyncMode;
+  tenantId: Types.ObjectId | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -61,6 +62,7 @@ const productSchema = new Schema<ProductDocument>(
     thumbnailUrl: { type: String, default: null },
     thumbnailPublicId: { type: String, default: null },
     syncMode: { type: String, enum: ['global', 'optional', 'private', 'exclusive'], default: 'optional' },
+    tenantId: { type: Schema.Types.ObjectId, ref: 'Tenant', default: null },
   },
   { timestamps: true }
 );

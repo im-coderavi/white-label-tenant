@@ -41,4 +41,14 @@ describe('Product model', () => {
       Product.create({ name: 'A', slug: 'a', type: 'not-a-type', basePrice: 1 })
     ).rejects.toThrow();
   });
+
+  it('defaults tenantId to null and can be set for private/exclusive assignment', async () => {
+    const product = await Product.create({ name: 'B', slug: 'b', type: 'software', basePrice: 5 });
+    expect(product.tenantId).toBeNull();
+
+    product.tenantId = new mongoose.Types.ObjectId();
+    await product.save();
+    const reloaded = await Product.findById(product._id);
+    expect(reloaded!.tenantId).not.toBeNull();
+  });
 });
