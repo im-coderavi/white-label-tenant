@@ -1,3 +1,7 @@
+jest.mock('../../src/common/smtpEmail', () => ({
+  smtpEmailService: { sendEmail: jest.fn().mockResolvedValue(undefined) },
+}));
+
 import mongoose from 'mongoose';
 import express from 'express';
 import request from 'supertest';

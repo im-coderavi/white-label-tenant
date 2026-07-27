@@ -8,7 +8,7 @@ import { hashPassword, comparePassword } from '../../common/password';
 import { generateOpaqueToken, hashToken } from '../../common/token';
 import { signAccessToken } from '../../common/jwt';
 import { NotFoundError, ConflictError, UnauthorizedError } from '../../common/errors';
-import { consoleEmailService } from '../../common/email';
+import { smtpEmailService } from '../../common/smtpEmail';
 import { env } from '../../config/env';
 
 const VERIFY_TTL_MS = 24 * 60 * 60 * 1000;
@@ -44,7 +44,7 @@ export async function register(input: {
     expiresAt: new Date(Date.now() + VERIFY_TTL_MS),
     used: false,
   });
-  await consoleEmailService.sendEmail(user.email, 'verify-email', { token: rawVerify });
+  await smtpEmailService.sendEmail(user.email, 'verify-email', { token: rawVerify });
   return { user };
 }
 
@@ -123,7 +123,7 @@ export async function forgotPassword(input: { email: string; tenantSubdomain: st
     expiresAt: new Date(Date.now() + RESET_TTL_MS),
     used: false,
   });
-  await consoleEmailService.sendEmail(user.email, 'reset-password', { token: rawToken });
+  await smtpEmailService.sendEmail(user.email, 'reset-password', { token: rawToken });
 }
 
 export async function resetPassword(input: { token: string; newPassword: string }): Promise<void> {
