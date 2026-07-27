@@ -151,3 +151,13 @@ export async function listVersions(productId: string): Promise<ProductVersionDoc
   await getProductById(productId);
   return ProductVersion.find({ productId }).sort({ createdAt: -1 });
 }
+
+export async function updateSyncMode(
+  id: string,
+  syncMode: ProductDocument['syncMode']
+): Promise<ProductDocument> {
+  const product = await getProductById(id);
+  product.syncMode = syncMode;
+  await product.save();
+  return product;
+}

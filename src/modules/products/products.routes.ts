@@ -8,6 +8,7 @@ import {
   listProductsQuerySchema,
   updateProductSchema,
   addVersionSchema,
+  syncModeSchema,
 } from './products.validators';
 import {
   listProductsHandler,
@@ -18,6 +19,7 @@ import {
   publishProductHandler,
   addVersionHandler,
   listVersionsHandler,
+  updateSyncModeHandler,
 } from './products.controller';
 
 export const productsRouter = Router();
@@ -37,3 +39,8 @@ productsRouter.post(
   addVersionHandler
 );
 productsRouter.get('/:id/versions', listVersionsHandler);
+productsRouter.patch(
+  '/:id/sync-mode',
+  validateBody(syncModeSchema),
+  updateSyncModeHandler
+);
