@@ -9,6 +9,7 @@ import {
   createProductHandler,
   getProductHandler,
   updateProductHandler,
+  archiveProductHandler,
 } from './products.controller';
 
 export const productsRouter = Router();
@@ -19,3 +20,4 @@ productsRouter.get('/', validateQuery(listProductsQuerySchema), listProductsHand
 productsRouter.post('/', upload.single('thumbnail'), validateBody(createProductSchema), createProductHandler);
 productsRouter.get('/:id', getProductHandler);
 productsRouter.patch('/:id', upload.single('thumbnail'), validateBody(updateProductSchema), updateProductHandler);
+productsRouter.delete('/:id', archiveProductHandler);

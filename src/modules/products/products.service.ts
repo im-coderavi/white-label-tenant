@@ -102,3 +102,10 @@ export async function updateProduct(
   await product.save();
   return product;
 }
+
+export async function archiveProduct(id: string): Promise<ProductDocument> {
+  const product = await getProductById(id);
+  product.status = 'archived';
+  await product.save();
+  return product;
+}

@@ -38,3 +38,12 @@ export async function updateProductHandler(req: Request, res: Response, next: Ne
     next(err);
   }
 }
+
+export async function archiveProductHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const product = await productsService.archiveProduct(req.params.id);
+    res.status(200).json({ product });
+  } catch (err) {
+    next(err);
+  }
+}
