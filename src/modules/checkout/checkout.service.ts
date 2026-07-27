@@ -3,6 +3,8 @@ import { Product } from '../../models/Product';
 import { ResellerProduct } from '../../models/ResellerProduct';
 import { License } from '../../models/License';
 import { User } from '../../models/User';
+import { ProductVersion } from '../../models/ProductVersion';
+import { DownloadToken } from '../../models/DownloadToken';
 import { ForbiddenError, NotFoundError } from '../../common/errors';
 import { mockPaymentGateway } from '../../common/paymentGateway';
 import { smtpEmailService } from '../../common/smtpEmail';
@@ -98,4 +100,23 @@ export async function processWebhook(gatewayOrderId: string, success: boolean): 
 
 export async function listOrdersForUser(userId: string): Promise<OrderDocument[]> {
   return Order.find({ customerUserId: userId }).sort({ createdAt: -1 });
+}
+
+const DOWNLOAD_TOKEN_TTL_MINUTES = 15;
+
+export async function generateDownloadToken(
+  orderId: string,
+  userId: string
+): Promise<{ fileUrl: string; expiresAt: Date }> {
+  const order = await Order.findById(orderId);
+  if (!order || order.customerUserId.toString() !== userId || order.status !== 'paid') {
+    throw new NotFoundError('Order not found');
+  }
+  const version = await ProductVersion.findOne({ productId: order.productId }).sort({ createdAt: -1 });
+  if (!version || !version.fileUrl) {
+    throw new NotFoundError('No downloadable file for this product');
+  }
+  const expiresAt = new Date(Date.now() + DOWNLOAD_TOKEN_TTL_MINUTES * 60 * 1000);
+  await DownloadToken.create({ orderId: order._id, fileUrl: version.fileUrl, expiresAt, used: false });
+  return { fileUrl: version.fileUrl, expiresAt };
 }

@@ -39,3 +39,16 @@ export async function listOrdersHandler(req: Request, res: Response, next: NextF
     next(err);
   }
 }
+
+export async function generateDownloadTokenHandler(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const result = await checkoutService.generateDownloadToken(req.params.orderId, req.user!.id);
+    res.status(200).json(result);
+  } catch (err) {
+    next(err);
+  }
+}
