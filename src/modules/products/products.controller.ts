@@ -77,7 +77,7 @@ export async function listVersionsHandler(req: Request, res: Response, next: Nex
 
 export async function updateSyncModeHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
-    const product = await productsService.updateSyncMode(req.params.id, req.body.syncMode);
+    const product = await productsService.updateSyncMode(req.params.id, req.body.syncMode, req.body.tenantId);
     res.status(200).json({ product });
   } catch (err) {
     next(err);

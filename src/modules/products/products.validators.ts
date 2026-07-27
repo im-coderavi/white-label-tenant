@@ -34,9 +34,15 @@ export const addVersionSchema = z.object({
   changelog: z.string().optional().default(''),
 });
 
-export const syncModeSchema = z.object({
-  syncMode: z.enum(['global', 'optional', 'private', 'exclusive']),
-});
+export const syncModeSchema = z
+  .object({
+    syncMode: z.enum(['global', 'optional', 'private', 'exclusive']),
+    tenantId: z.string().optional(),
+  })
+  .refine((data) => !(['private', 'exclusive'].includes(data.syncMode) && !data.tenantId), {
+    message: 'tenantId is required when syncMode is private or exclusive',
+    path: ['tenantId'],
+  });
 
 export const listProductsQuerySchema = z.object({
   page: z.coerce.number().int().min(1).optional().default(1),

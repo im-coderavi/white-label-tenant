@@ -1,3 +1,4 @@
+import { Types } from 'mongoose';
 import { Product, ProductDocument } from '../../models/Product';
 import { ProductVersion, ProductVersionDocument } from '../../models/ProductVersion';
 import { Tenant } from '../../models/Tenant';
@@ -156,11 +157,15 @@ export async function listVersions(productId: string): Promise<ProductVersionDoc
 
 export async function updateSyncMode(
   id: string,
-  syncMode: ProductDocument['syncMode']
+  syncMode: ProductDocument['syncMode'],
+  tenantId?: string
 ): Promise<ProductDocument> {
   const product = await getProductById(id);
   product.syncMode = syncMode;
+  product.tenantId =
+    (syncMode === 'private' || syncMode === 'exclusive') && tenantId ? new Types.ObjectId(tenantId) : null;
   await product.save();
+  await syncProductToTenants(product);
   return product;
 }
 
