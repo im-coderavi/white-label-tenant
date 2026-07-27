@@ -1,4 +1,6 @@
 import { Tenant, TenantDocument } from '../../models/Tenant';
+import { Product } from '../../models/Product';
+import { ResellerProduct } from '../../models/ResellerProduct';
 import { ConflictError, NotFoundError } from '../../common/errors';
 
 export async function createTenant(input: { name: string; subdomain: string }): Promise<TenantDocument> {
@@ -7,7 +9,20 @@ export async function createTenant(input: { name: string; subdomain: string }): 
   if (existing) {
     throw new ConflictError('Subdomain already in use');
   }
-  return Tenant.create({ name: input.name, subdomain, status: 'active' });
+  const tenant = await Tenant.create({ name: input.name, subdomain, status: 'active' });
+
+  const globalProducts = await Product.find({ syncMode: 'global' });
+  await Promise.all(
+    globalProducts.map((product) =>
+      ResellerProduct.findOneAndUpdate(
+        { tenantId: tenant._id, productId: product._id },
+        { $set: { enabled: true }, $setOnInsert: { tenantId: tenant._id, productId: product._id } },
+        { upsert: true, new: true }
+      )
+    )
+  );
+
+  return tenant;
 }
 
 export async function getTenantById(id: string): Promise<TenantDocument> {
