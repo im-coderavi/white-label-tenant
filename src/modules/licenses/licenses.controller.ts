@@ -38,3 +38,12 @@ export async function revokeLicenseHandler(req: Request, res: Response, next: Ne
     next(err);
   }
 }
+
+export async function assignLicenseHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const license = await licensesService.assignLicense(req.params.id, req.body.userId);
+    res.status(200).json({ license });
+  } catch (err) {
+    next(err);
+  }
+}

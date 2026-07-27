@@ -1,6 +1,7 @@
 import { License, LicenseDocument } from '../../models/License';
 import { generateLicenseKey } from '../../common/licenseKey';
 import { ConflictError, NotFoundError } from '../../common/errors';
+import { User } from '../../models/User';
 
 async function generateUniqueLicenseKey(): Promise<string> {
   let key = generateLicenseKey();
@@ -87,6 +88,22 @@ export async function getLicenseById(id: string): Promise<LicenseDocument> {
 export async function revokeLicense(id: string): Promise<LicenseDocument> {
   const license = await getLicenseById(id);
   license.status = 'revoked';
+  await license.save();
+  return license;
+}
+
+export async function assignLicense(licenseId: string, userId: string): Promise<LicenseDocument> {
+  const license = await getLicenseById(licenseId);
+  if (license.status !== 'available') {
+    throw new ConflictError('License is not available for assignment');
+  }
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new NotFoundError('User not found');
+  }
+  license.assignedUserId = user._id;
+  license.tenantId = user.tenantId;
+  license.status = 'assigned';
   await license.save();
   return license;
 }
