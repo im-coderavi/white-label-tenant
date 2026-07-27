@@ -8,6 +8,7 @@ declare global {
     interface Request {
       user?: { id: string; role: string; tenantId: string | null };
       tenantId?: string | null;
+      rawBody?: Buffer;
     }
   }
 }

@@ -1,8 +1,11 @@
 import { Order, OrderDocument } from '../../models/Order';
 import { Product } from '../../models/Product';
 import { ResellerProduct } from '../../models/ResellerProduct';
+import { License } from '../../models/License';
+import { User } from '../../models/User';
 import { ForbiddenError, NotFoundError } from '../../common/errors';
 import { mockPaymentGateway } from '../../common/paymentGateway';
+import { smtpEmailService } from '../../common/smtpEmail';
 
 export interface CreateCheckoutResult {
   orderId: string;
@@ -57,4 +60,38 @@ export async function createCheckout(input: {
     amount,
     currency: product.currency,
   };
+}
+
+export async function processWebhook(gatewayOrderId: string, success: boolean): Promise<OrderDocument> {
+  const order = await Order.findOne({ paymentRef: gatewayOrderId });
+  if (!order) {
+    throw new NotFoundError('Order not found for gateway reference');
+  }
+
+  if (!success) {
+    order.status = 'failed';
+    await order.save();
+    return order;
+  }
+
+  order.status = 'paid';
+
+  const license = await License.findOne({ productId: order.productId, status: 'available' });
+  if (license) {
+    license.assignedUserId = order.customerUserId;
+    license.tenantId = order.tenantId;
+    license.orderId = order._id;
+    license.status = 'assigned';
+    await license.save();
+    order.licenseId = license._id;
+  }
+
+  await order.save();
+
+  const customer = await User.findById(order.customerUserId);
+  if (customer) {
+    await smtpEmailService.sendEmail(customer.email, 'order-paid', { orderId: order._id.toString() });
+  }
+
+  return order;
 }
