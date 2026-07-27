@@ -95,3 +95,7 @@ export async function processWebhook(gatewayOrderId: string, success: boolean): 
 
   return order;
 }
+
+export async function listOrdersForUser(userId: string): Promise<OrderDocument[]> {
+  return Order.find({ customerUserId: userId }).sort({ createdAt: -1 });
+}

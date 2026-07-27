@@ -3,7 +3,7 @@ import { requireAuth } from '../../middleware/auth.middleware';
 import { requireRole } from '../../middleware/rbac.middleware';
 import { validateBody } from '../../middleware/validate.middleware';
 import { createCheckoutSchema } from './checkout.validators';
-import { createCheckoutHandler, webhookHandler } from './checkout.controller';
+import { createCheckoutHandler, webhookHandler, listOrdersHandler } from './checkout.controller';
 
 export const checkoutRouter = Router();
 
@@ -15,3 +15,4 @@ checkoutRouter.post(
   createCheckoutHandler
 );
 checkoutRouter.post('/checkout/webhook', webhookHandler);
+checkoutRouter.get('/orders', requireAuth, requireRole('customer'), listOrdersHandler);

@@ -30,3 +30,12 @@ export async function webhookHandler(req: Request, res: Response, next: NextFunc
     next(err);
   }
 }
+
+export async function listOrdersHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const orders = await checkoutService.listOrdersForUser(req.user!.id);
+    res.status(200).json({ orders });
+  } catch (err) {
+    next(err);
+  }
+}
