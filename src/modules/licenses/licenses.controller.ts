@@ -47,3 +47,21 @@ export async function assignLicenseHandler(req: Request, res: Response, next: Ne
     next(err);
   }
 }
+
+export async function listMyLicensesHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const licenses = await licensesService.listLicensesForUser(req.user!.id);
+    res.status(200).json({ licenses });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function activateLicenseHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const license = await licensesService.activateLicense(req.params.id, req.user!.id);
+    res.status(200).json({ license });
+  } catch (err) {
+    next(err);
+  }
+}

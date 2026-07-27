@@ -1,6 +1,6 @@
 import { License, LicenseDocument } from '../../models/License';
 import { generateLicenseKey } from '../../common/licenseKey';
-import { ConflictError, NotFoundError } from '../../common/errors';
+import { ConflictError, NotFoundError, UnauthorizedError } from '../../common/errors';
 import { User } from '../../models/User';
 
 async function generateUniqueLicenseKey(): Promise<string> {
@@ -104,6 +104,29 @@ export async function assignLicense(licenseId: string, userId: string): Promise<
   license.assignedUserId = user._id;
   license.tenantId = user.tenantId;
   license.status = 'assigned';
+  await license.save();
+  return license;
+}
+
+export async function listLicensesForUser(userId: string): Promise<LicenseDocument[]> {
+  return License.find({ assignedUserId: userId }).sort({ createdAt: -1 });
+}
+
+export async function activateLicense(id: string, userId: string): Promise<LicenseDocument> {
+  const license = await getLicenseById(id);
+  if (!license.assignedUserId || license.assignedUserId.toString() !== userId) {
+    throw new UnauthorizedError('This license is not assigned to you');
+  }
+  if (license.expiresAt && license.expiresAt.getTime() < Date.now()) {
+    license.status = 'expired';
+    await license.save();
+    throw new UnauthorizedError('License has expired');
+  }
+  if (license.activationsUsed >= license.activationLimit) {
+    throw new ConflictError('Activation limit reached');
+  }
+  license.activationsUsed += 1;
+  license.status = 'activated';
   await license.save();
   return license;
 }
