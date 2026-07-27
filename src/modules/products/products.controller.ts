@@ -47,3 +47,12 @@ export async function archiveProductHandler(req: Request, res: Response, next: N
     next(err);
   }
 }
+
+export async function publishProductHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const product = await productsService.publishProduct(req.params.id);
+    res.status(200).json({ product });
+  } catch (err) {
+    next(err);
+  }
+}

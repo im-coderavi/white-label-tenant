@@ -1,6 +1,6 @@
 import { Product, ProductDocument } from '../../models/Product';
 import { uploadBuffer } from '../../common/cloudinary';
-import { NotFoundError } from '../../common/errors';
+import { NotFoundError, ConflictError } from '../../common/errors';
 
 function slugify(name: string): string {
   return name
@@ -106,6 +106,16 @@ export async function updateProduct(
 export async function archiveProduct(id: string): Promise<ProductDocument> {
   const product = await getProductById(id);
   product.status = 'archived';
+  await product.save();
+  return product;
+}
+
+export async function publishProduct(id: string): Promise<ProductDocument> {
+  const product = await getProductById(id);
+  if (!product.currentVersion) {
+    throw new ConflictError('Cannot publish a product with no version');
+  }
+  product.status = 'published';
   await product.save();
   return product;
 }

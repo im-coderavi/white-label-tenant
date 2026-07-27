@@ -10,6 +10,7 @@ import {
   getProductHandler,
   updateProductHandler,
   archiveProductHandler,
+  publishProductHandler,
 } from './products.controller';
 
 export const productsRouter = Router();
@@ -21,3 +22,4 @@ productsRouter.post('/', upload.single('thumbnail'), validateBody(createProductS
 productsRouter.get('/:id', getProductHandler);
 productsRouter.patch('/:id', upload.single('thumbnail'), validateBody(updateProductSchema), updateProductHandler);
 productsRouter.delete('/:id', archiveProductHandler);
+productsRouter.post('/:id/publish', publishProductHandler);
