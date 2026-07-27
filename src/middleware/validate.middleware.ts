@@ -13,3 +13,15 @@ export function validateBody(schema: ZodTypeAny): RequestHandler {
     next();
   };
 }
+
+export function validateQuery(schema: ZodTypeAny): RequestHandler {
+  return (req: Request, _res: Response, next: NextFunction) => {
+    const result = schema.safeParse(req.query);
+    if (!result.success) {
+      next(new ValidationError('Validation failed', result.error.flatten().fieldErrors));
+      return;
+    }
+    req.query = result.data as unknown as typeof req.query;
+    next();
+  };
+}
