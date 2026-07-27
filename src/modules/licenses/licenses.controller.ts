@@ -20,3 +20,12 @@ export async function generateLicensesHandler(req: Request, res: Response, next:
     next(err);
   }
 }
+
+export async function importLicensesHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const licenses = await licensesService.importLicenses(req.body);
+    res.status(201).json({ licenses });
+  } catch (err) {
+    next(err);
+  }
+}

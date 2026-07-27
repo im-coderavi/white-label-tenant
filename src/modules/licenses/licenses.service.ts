@@ -1,5 +1,6 @@
 import { License, LicenseDocument } from '../../models/License';
 import { generateLicenseKey } from '../../common/licenseKey';
+import { ConflictError } from '../../common/errors';
 
 async function generateUniqueLicenseKey(): Promise<string> {
   let key = generateLicenseKey();
@@ -61,4 +62,18 @@ export async function generateLicenses(input: {
     licenses.push(license);
   }
   return licenses;
+}
+
+export async function importLicenses(input: {
+  productId: string;
+  keys: string[];
+}): Promise<LicenseDocument[]> {
+  const existing = await License.findOne({ key: { $in: input.keys } });
+  if (existing) {
+    throw new ConflictError('One or more license keys already exist');
+  }
+  const docs = await License.insertMany(
+    input.keys.map((key) => ({ productId: input.productId, key, status: 'available' }))
+  );
+  return docs as unknown as LicenseDocument[];
 }
