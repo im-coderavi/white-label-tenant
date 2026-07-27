@@ -9,6 +9,12 @@ const envSchema = z.object({
   MONGO_URI: z.string().min(1, 'MONGO_URI is required'),
   JWT_ACCESS_SECRET: z.string().min(32, 'JWT_ACCESS_SECRET must be at least 32 characters'),
   REFRESH_TOKEN_TTL_DAYS: z.string().default('30'),
+  CLOUDINARY_URL: z.string().min(1, 'CLOUDINARY_URL is required'),
+  SMTP_HOST: z.string().min(1, 'SMTP_HOST is required'),
+  SMTP_PORT: z.string().default('587'),
+  SMTP_USER: z.string().min(1, 'SMTP_USER is required'),
+  SMTP_PASSWORD: z.string().min(1, 'SMTP_PASSWORD is required'),
+  SMTP_FROM: z.string().min(1, 'SMTP_FROM is required'),
 });
 
 const parsed = envSchema.safeParse(process.env);
@@ -23,4 +29,5 @@ export const env = {
   ...parsed.data,
   PORT: Number(parsed.data.PORT),
   REFRESH_TOKEN_TTL_DAYS: Number(parsed.data.REFRESH_TOKEN_TTL_DAYS),
+  SMTP_PORT: Number(parsed.data.SMTP_PORT),
 };
