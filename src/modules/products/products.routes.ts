@@ -3,7 +3,12 @@ import { requireAuth } from '../../middleware/auth.middleware';
 import { requireRole } from '../../middleware/rbac.middleware';
 import { validateBody, validateQuery } from '../../middleware/validate.middleware';
 import { upload } from '../../middleware/upload.middleware';
-import { createProductSchema, listProductsQuerySchema, updateProductSchema } from './products.validators';
+import {
+  createProductSchema,
+  listProductsQuerySchema,
+  updateProductSchema,
+  addVersionSchema,
+} from './products.validators';
 import {
   listProductsHandler,
   createProductHandler,
@@ -11,6 +16,8 @@ import {
   updateProductHandler,
   archiveProductHandler,
   publishProductHandler,
+  addVersionHandler,
+  listVersionsHandler,
 } from './products.controller';
 
 export const productsRouter = Router();
@@ -23,3 +30,10 @@ productsRouter.get('/:id', getProductHandler);
 productsRouter.patch('/:id', upload.single('thumbnail'), validateBody(updateProductSchema), updateProductHandler);
 productsRouter.delete('/:id', archiveProductHandler);
 productsRouter.post('/:id/publish', publishProductHandler);
+productsRouter.post(
+  '/:id/versions',
+  upload.single('file'),
+  validateBody(addVersionSchema),
+  addVersionHandler
+);
+productsRouter.get('/:id/versions', listVersionsHandler);

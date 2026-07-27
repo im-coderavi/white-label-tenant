@@ -1,4 +1,5 @@
 import { Product, ProductDocument } from '../../models/Product';
+import { ProductVersion, ProductVersionDocument } from '../../models/ProductVersion';
 import { uploadBuffer } from '../../common/cloudinary';
 import { NotFoundError, ConflictError } from '../../common/errors';
 
@@ -118,4 +119,35 @@ export async function publishProduct(id: string): Promise<ProductDocument> {
   product.status = 'published';
   await product.save();
   return product;
+}
+
+export async function addVersion(
+  productId: string,
+  input: { version: string; changelog?: string },
+  file?: Express.Multer.File
+): Promise<ProductVersionDocument> {
+  const product = await getProductById(productId);
+  let fileUrl: string | null = null;
+  let filePublicId: string | null = null;
+  if (file) {
+    const uploaded = await uploadBuffer(file.buffer, 'toolzypro/product-files');
+    fileUrl = uploaded.secureUrl;
+    filePublicId = uploaded.publicId;
+  }
+  const version = await ProductVersion.create({
+    productId: product._id,
+    version: input.version,
+    changelog: input.changelog ?? '',
+    fileUrl,
+    filePublicId,
+  });
+  product.currentVersion = input.version;
+  product.changelogJson = { version: input.version, changelog: input.changelog ?? '' };
+  await product.save();
+  return version;
+}
+
+export async function listVersions(productId: string): Promise<ProductVersionDocument[]> {
+  await getProductById(productId);
+  return ProductVersion.find({ productId }).sort({ createdAt: -1 });
 }
