@@ -1,5 +1,6 @@
 import { Product, ProductDocument } from '../../models/Product';
 import { uploadBuffer } from '../../common/cloudinary';
+import { NotFoundError } from '../../common/errors';
 
 function slugify(name: string): string {
   return name
@@ -75,4 +76,29 @@ export async function createProduct(
     thumbnailUrl,
     thumbnailPublicId,
   });
+}
+
+export async function getProductById(id: string): Promise<ProductDocument> {
+  const product = await Product.findById(id);
+  if (!product) throw new NotFoundError('Product not found');
+  return product;
+}
+
+export async function updateProduct(
+  id: string,
+  input: { name?: string; description?: string; basePrice?: number; currency?: string },
+  thumbnailFile?: Express.Multer.File
+): Promise<ProductDocument> {
+  const product = await getProductById(id);
+  if (input.name !== undefined) product.name = input.name;
+  if (input.description !== undefined) product.description = input.description;
+  if (input.basePrice !== undefined) product.basePrice = input.basePrice;
+  if (input.currency !== undefined) product.currency = input.currency;
+  if (thumbnailFile) {
+    const uploaded = await uploadBuffer(thumbnailFile.buffer, 'toolzypro/product-thumbnails');
+    product.thumbnailUrl = uploaded.secureUrl;
+    product.thumbnailPublicId = uploaded.publicId;
+  }
+  await product.save();
+  return product;
 }

@@ -20,3 +20,21 @@ export async function createProductHandler(req: Request, res: Response, next: Ne
     next(err);
   }
 }
+
+export async function getProductHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const product = await productsService.getProductById(req.params.id);
+    res.status(200).json({ product });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function updateProductHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const product = await productsService.updateProduct(req.params.id, req.body, req.file);
+    res.status(200).json({ product });
+  } catch (err) {
+    next(err);
+  }
+}
