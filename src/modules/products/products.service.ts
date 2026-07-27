@@ -1,7 +1,7 @@
 import { Types } from 'mongoose';
 import { Product, ProductDocument } from '../../models/Product';
 import { ProductVersion, ProductVersionDocument } from '../../models/ProductVersion';
-import { Tenant } from '../../models/Tenant';
+import { Tenant, TenantDocument } from '../../models/Tenant';
 import { ResellerProduct } from '../../models/ResellerProduct';
 import { uploadBuffer } from '../../common/cloudinary';
 import { NotFoundError, ConflictError } from '../../common/errors';
@@ -206,4 +206,17 @@ export async function forceSync(id: string): Promise<ProductDocument> {
   const product = await getProductById(id);
   await syncProductToTenants(product);
   return product;
+}
+
+export async function listEntitledTenants(
+  productId: string
+): Promise<Array<{ _id: string; name: string; subdomain: string }>> {
+  await getProductById(productId);
+  const rows = await ResellerProduct.find({ productId, enabled: true }).populate<{
+    tenantId: TenantDocument;
+  }>('tenantId');
+  return rows.map((row) => {
+    const tenant = row.tenantId as unknown as TenantDocument;
+    return { _id: tenant._id.toString(), name: tenant.name, subdomain: tenant.subdomain };
+  });
 }

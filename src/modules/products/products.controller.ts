@@ -92,3 +92,12 @@ export async function forceSyncHandler(req: Request, res: Response, next: NextFu
     next(err);
   }
 }
+
+export async function listResellersHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const tenants = await productsService.listEntitledTenants(req.params.id);
+    res.status(200).json({ tenants });
+  } catch (err) {
+    next(err);
+  }
+}

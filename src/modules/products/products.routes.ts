@@ -21,6 +21,7 @@ import {
   listVersionsHandler,
   updateSyncModeHandler,
   forceSyncHandler,
+  listResellersHandler,
 } from './products.controller';
 
 export const productsRouter = Router();
@@ -46,3 +47,4 @@ productsRouter.patch(
   updateSyncModeHandler
 );
 productsRouter.post('/:id/sync', forceSyncHandler);
+productsRouter.get('/:id/resellers', listResellersHandler);
