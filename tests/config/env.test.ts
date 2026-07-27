@@ -32,4 +32,9 @@ describe('env validation', () => {
     expect(env.SMTP_PORT).toBe(587);
     expect(typeof env.SMTP_PORT).toBe('number');
   });
+
+  it('throws when MOCK_WEBHOOK_SECRET is missing', () => {
+    delete process.env.MOCK_WEBHOOK_SECRET;
+    expect(() => require('../../src/config/env')).toThrow();
+  });
 });

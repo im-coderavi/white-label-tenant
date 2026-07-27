@@ -15,6 +15,7 @@ const envSchema = z.object({
   SMTP_USER: z.string().min(1, 'SMTP_USER is required'),
   SMTP_PASSWORD: z.string().min(1, 'SMTP_PASSWORD is required'),
   SMTP_FROM: z.string().min(1, 'SMTP_FROM is required'),
+  MOCK_WEBHOOK_SECRET: z.string().min(1, 'MOCK_WEBHOOK_SECRET is required'),
 });
 
 const parsed = envSchema.safeParse(process.env);

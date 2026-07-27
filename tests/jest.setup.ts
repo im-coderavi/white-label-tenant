@@ -8,3 +8,4 @@ process.env.SMTP_PORT = '587';
 process.env.SMTP_USER = 'test@toolzypro.local';
 process.env.SMTP_PASSWORD = 'test-password';
 process.env.SMTP_FROM = 'noreply@toolzypro.local';
+process.env.MOCK_WEBHOOK_SECRET = 'test-webhook-secret-please-ignore';
