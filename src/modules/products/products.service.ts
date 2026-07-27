@@ -1,5 +1,7 @@
 import { Product, ProductDocument } from '../../models/Product';
 import { ProductVersion, ProductVersionDocument } from '../../models/ProductVersion';
+import { Tenant } from '../../models/Tenant';
+import { ResellerProduct } from '../../models/ResellerProduct';
 import { uploadBuffer } from '../../common/cloudinary';
 import { NotFoundError, ConflictError } from '../../common/errors';
 
@@ -160,4 +162,37 @@ export async function updateSyncMode(
   product.syncMode = syncMode;
   await product.save();
   return product;
+}
+
+export async function syncProductToTenants(product: ProductDocument): Promise<void> {
+  if (product.syncMode === 'global') {
+    const tenants = await Tenant.find();
+    await Promise.all(
+      tenants.map((tenant) =>
+        ResellerProduct.findOneAndUpdate(
+          { tenantId: tenant._id, productId: product._id },
+          { $set: { enabled: true }, $setOnInsert: { tenantId: tenant._id, productId: product._id } },
+          { upsert: true, new: true }
+        )
+      )
+    );
+    return;
+  }
+
+  if (product.syncMode === 'private' || product.syncMode === 'exclusive') {
+    if (!product.tenantId) return;
+    const entitledTenantId = product.tenantId;
+    await ResellerProduct.findOneAndUpdate(
+      { tenantId: entitledTenantId, productId: product._id },
+      { $set: { enabled: true }, $setOnInsert: { tenantId: entitledTenantId, productId: product._id } },
+      { upsert: true, new: true }
+    );
+    await ResellerProduct.updateMany(
+      { productId: product._id, tenantId: { $ne: entitledTenantId } },
+      { $set: { enabled: false } }
+    );
+    return;
+  }
+
+  // 'optional' mode — no-op, resellers opt in manually (future sub-project)
 }
