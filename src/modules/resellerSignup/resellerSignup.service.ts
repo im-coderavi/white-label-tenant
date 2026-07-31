@@ -1,10 +1,11 @@
 import { Tenant } from '../../models/Tenant';
 import { User } from '../../models/User';
 import { Plan } from '../../models/Plan';
-import { Subscription } from '../../models/Subscription';
+import { Subscription, SubscriptionDocument } from '../../models/Subscription';
 import { ConflictError, NotFoundError } from '../../common/errors';
 import { hashPassword } from '../../common/password';
 import { mockPaymentGateway } from '../../common/paymentGateway';
+import { smtpEmailService } from '../../common/smtpEmail';
 
 export interface RegisterResellerResult {
   tenantId: string;
@@ -64,4 +65,54 @@ export async function registerReseller(input: {
     amount: plan.price,
     currency: plan.currency,
   };
+}
+
+export async function processResellerSignupWebhook(
+  gatewayOrderId: string,
+  success: boolean
+): Promise<SubscriptionDocument> {
+  const subscription = await Subscription.findOne({ paymentRef: gatewayOrderId });
+  if (!subscription) {
+    throw new NotFoundError('Subscription not found for gateway reference');
+  }
+
+  if (!success) {
+    subscription.status = 'cancelled';
+    await subscription.save();
+    return subscription;
+  }
+
+  const plan = await Plan.findById(subscription.planId);
+  if (!plan) {
+    throw new NotFoundError('Plan not found');
+  }
+
+  subscription.status = 'active';
+  if (plan.billingCycle === 'lifetime') {
+    subscription.currentPeriodEnd = null;
+  } else {
+    const periodEnd = new Date();
+    if (plan.billingCycle === 'monthly') {
+      periodEnd.setMonth(periodEnd.getMonth() + 1);
+    } else {
+      periodEnd.setFullYear(periodEnd.getFullYear() + 1);
+    }
+    subscription.currentPeriodEnd = periodEnd;
+  }
+  await subscription.save();
+
+  await Tenant.findByIdAndUpdate(subscription.tenantId, { status: 'active' });
+  const user = await User.findOneAndUpdate(
+    { tenantId: subscription.tenantId, role: 'reseller_admin' },
+    { status: 'active' },
+    { new: true }
+  );
+
+  if (user) {
+    await smtpEmailService.sendEmail(user.email, 'reseller-welcome', {
+      tenantId: subscription.tenantId.toString(),
+    });
+  }
+
+  return subscription;
 }
