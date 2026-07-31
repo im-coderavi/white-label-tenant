@@ -36,3 +36,16 @@ export async function archivePlanHandler(req: Request, res: Response, next: Next
     next(err);
   }
 }
+
+export async function listActiveResellerPlansHandler(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const plans = await plansService.listActiveResellerPlans();
+    res.status(200).json({ plans });
+  } catch (err) {
+    next(err);
+  }
+}

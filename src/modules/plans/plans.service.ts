@@ -59,3 +59,7 @@ export async function archivePlan(id: string): Promise<PlanDocument> {
   await plan.save();
   return plan;
 }
+
+export async function listActiveResellerPlans(): Promise<PlanDocument[]> {
+  return Plan.find({ status: 'active', scope: 'reseller' }).sort({ price: 1 });
+}
