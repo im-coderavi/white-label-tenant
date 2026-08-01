@@ -7,7 +7,8 @@ import AdminLayout from './pages/admin/AdminLayout';
 import ProductsListPage from './pages/admin/ProductsListPage';
 import ProductFormPage from './pages/admin/ProductFormPage';
 import ProductDetailPage from './pages/admin/ProductDetailPage';
-import ResellerHomePage from './pages/ResellerHomePage';
+import ResellerLayout from './pages/reseller/ResellerLayout';
+import CatalogPage from './pages/reseller/CatalogPage';
 import CustomerHomePage from './pages/CustomerHomePage';
 import { ProtectedRoute } from './auth/ProtectedRoute';
 
@@ -36,10 +37,13 @@ export default function App(): JSX.Element {
         path="/reseller"
         element={
           <ProtectedRoute allowedRoles={['reseller_admin', 'reseller_staff']}>
-            <ResellerHomePage />
+            <ResellerLayout />
           </ProtectedRoute>
         }
-      />
+      >
+        <Route index element={<Navigate to="/reseller/catalog" replace />} />
+        <Route path="catalog" element={<CatalogPage />} />
+      </Route>
       <Route
         path="/account"
         element={

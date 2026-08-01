@@ -57,6 +57,25 @@ describe('App', () => {
     expect(await screen.findByRole('heading', { name: 'Products' })).toBeInTheDocument();
   });
 
+  it('logs in as reseller_admin and lands on the catalog page', async () => {
+    vi.mocked(api.post).mockResolvedValueOnce({
+      data: {
+        accessToken: 'access-2',
+        refreshToken: 'refresh-2',
+        user: { id: '2', email: 'reseller@example.com', role: 'reseller_admin', tenantId: 'tenant-1' },
+      },
+    });
+    vi.mocked(api.get).mockResolvedValueOnce({ data: { items: [] } });
+
+    renderApp('/login');
+
+    await userEvent.type(screen.getByLabelText('Email'), 'reseller@example.com');
+    await userEvent.type(screen.getByLabelText('Password'), 'longenough1');
+    await userEvent.click(screen.getByRole('button', { name: 'Log in' }));
+
+    expect(await screen.findByRole('heading', { name: 'Catalog' })).toBeInTheDocument();
+  });
+
   it('redirects an unauthenticated visit to /admin back to /login', async () => {
     renderApp('/admin');
     expect(await screen.findByRole('heading', { name: 'Log in' })).toBeInTheDocument();
