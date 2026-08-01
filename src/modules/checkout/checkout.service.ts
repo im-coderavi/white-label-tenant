@@ -5,7 +5,7 @@ import { License } from '../../models/License';
 import { User } from '../../models/User';
 import { ProductVersion } from '../../models/ProductVersion';
 import { DownloadToken } from '../../models/DownloadToken';
-import { ForbiddenError, NotFoundError } from '../../common/errors';
+import { ConflictError, ForbiddenError, NotFoundError } from '../../common/errors';
 import { mockPaymentGateway } from '../../common/paymentGateway';
 import { smtpEmailService } from '../../common/smtpEmail';
 
@@ -76,18 +76,7 @@ export async function createCheckout(input: {
   };
 }
 
-export async function processWebhook(gatewayOrderId: string, success: boolean): Promise<OrderDocument> {
-  const order = await Order.findOne({ paymentRef: gatewayOrderId });
-  if (!order) {
-    throw new NotFoundError('Order not found for gateway reference');
-  }
-
-  if (!success) {
-    order.status = 'failed';
-    await order.save();
-    return order;
-  }
-
+async function markOrderPaid(order: OrderDocument): Promise<OrderDocument> {
   order.status = 'paid';
 
   const license = await License.findOne({ productId: order.productId, status: 'available' });
@@ -108,6 +97,32 @@ export async function processWebhook(gatewayOrderId: string, success: boolean): 
   }
 
   return order;
+}
+
+export async function processWebhook(gatewayOrderId: string, success: boolean): Promise<OrderDocument> {
+  const order = await Order.findOne({ paymentRef: gatewayOrderId });
+  if (!order) {
+    throw new NotFoundError('Order not found for gateway reference');
+  }
+
+  if (!success) {
+    order.status = 'failed';
+    await order.save();
+    return order;
+  }
+
+  return markOrderPaid(order);
+}
+
+export async function confirmPayment(orderId: string, userId: string): Promise<OrderDocument> {
+  const order = await Order.findById(orderId);
+  if (!order || order.customerUserId.toString() !== userId) {
+    throw new NotFoundError('Order not found');
+  }
+  if (order.status !== 'pending') {
+    throw new ConflictError('Order is not pending payment');
+  }
+  return markOrderPaid(order);
 }
 
 export async function listOrdersForUser(userId: string): Promise<OrderDocument[]> {

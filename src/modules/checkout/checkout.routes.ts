@@ -8,6 +8,7 @@ import {
   webhookHandler,
   listOrdersHandler,
   generateDownloadTokenHandler,
+  confirmPaymentHandler,
 } from './checkout.controller';
 
 export const checkoutRouter = Router();
@@ -21,6 +22,12 @@ checkoutRouter.post(
 );
 checkoutRouter.post('/checkout/webhook', webhookHandler);
 checkoutRouter.get('/orders', requireAuth, requireRole('customer'), listOrdersHandler);
+checkoutRouter.post(
+  '/orders/:id/confirm-payment',
+  requireAuth,
+  requireRole('customer'),
+  confirmPaymentHandler
+);
 checkoutRouter.get(
   '/downloads/:orderId',
   requireAuth,
