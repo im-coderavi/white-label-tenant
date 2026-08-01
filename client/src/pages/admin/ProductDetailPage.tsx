@@ -10,6 +10,8 @@ import {
   archiveProduct,
   publishProduct,
   updateSyncMode,
+  listVersions,
+  addVersion,
 } from '../../api/adminProducts';
 import { listTenants } from '../../api/adminTenants';
 import { Button } from '../../components/ui/button';
@@ -69,6 +71,27 @@ export default function ProductDetailPage(): JSX.Element {
     }
   }, [product]);
 
+  const {
+    register: registerVersion,
+    handleSubmit: handleSubmitVersion,
+    reset: resetVersionForm,
+    formState: { errors: versionErrors, isSubmitting: isSubmittingVersion },
+  } = useForm<{ version: string; changelog?: string }>({
+    resolver: zodResolver(
+      z.object({
+        version: z.string().min(1, 'Version is required'),
+        changelog: z.string().optional(),
+      })
+    ),
+  });
+  const [versionFile, setVersionFile] = useState<File | undefined>(undefined);
+
+  const { data: versions } = useQuery({
+    queryKey: ['admin-product-versions', id],
+    queryFn: () => listVersions(id as string),
+    enabled: Boolean(id),
+  });
+
   if (isLoading || !product) {
     return <p>Loading...</p>;
   }
@@ -110,6 +133,14 @@ export default function ProductDetailPage(): JSX.Element {
     } catch {
       setSyncModeError('Could not update sync mode. Please try again.');
     }
+  };
+
+  const onSubmitVersion = async (values: { version: string; changelog?: string }): Promise<void> => {
+    await addVersion(product._id, { ...values, file: versionFile });
+    setVersionFile(undefined);
+    resetVersionForm();
+    await queryClient.invalidateQueries({ queryKey: ['admin-product-versions', id] });
+    await queryClient.invalidateQueries({ queryKey: ['admin-product', id] });
   };
 
   return (
@@ -173,6 +204,33 @@ export default function ProductDetailPage(): JSX.Element {
 
         <Button type="submit">Update sync mode</Button>
       </form>
+
+      <section>
+        <h2>Versions</h2>
+        <ul>
+          {versions?.map((version) => (
+            <li key={version._id}>
+              <strong>{version.version}</strong> — {version.changelog}
+            </li>
+          ))}
+        </ul>
+
+        <form onSubmit={handleSubmitVersion(onSubmitVersion)}>
+          <label htmlFor="version">Version</label>
+          <input id="version" {...registerVersion('version')} />
+          {versionErrors.version && <p>{versionErrors.version.message}</p>}
+
+          <label htmlFor="changelog">Changelog</label>
+          <textarea id="changelog" {...registerVersion('changelog')} />
+
+          <label htmlFor="versionFile">File</label>
+          <input id="versionFile" type="file" onChange={(e) => setVersionFile(e.target.files?.[0])} />
+
+          <Button type="submit" disabled={isSubmittingVersion}>
+            Add version
+          </Button>
+        </form>
+      </section>
     </div>
   );
 }

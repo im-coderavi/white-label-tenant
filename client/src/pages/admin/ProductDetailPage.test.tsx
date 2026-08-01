@@ -128,4 +128,33 @@ describe('ProductDetailPage', () => {
       })
     );
   });
+
+  it('lists versions and adds a new one, resetting the form', async () => {
+    vi.mocked(adminProductsApi.listVersions).mockResolvedValueOnce([
+      { _id: 'v1', version: '1.0.0', changelog: 'Initial', fileUrl: null, createdAt: '2026-01-01T00:00:00.000Z' },
+    ]);
+    vi.mocked(adminProductsApi.addVersion).mockResolvedValueOnce({
+      _id: 'v2',
+      version: '1.1.0',
+      changelog: 'Update',
+      fileUrl: null,
+      createdAt: '2026-01-02T00:00:00.000Z',
+    });
+    renderPage();
+    await screen.findByText('Super Tool');
+
+    expect(await screen.findByText('1.0.0')).toBeInTheDocument();
+
+    await userEvent.type(screen.getByLabelText('Version'), '1.1.0');
+    await userEvent.type(screen.getByLabelText('Changelog'), 'Update');
+    await userEvent.click(screen.getByRole('button', { name: 'Add version' }));
+
+    await waitFor(() =>
+      expect(adminProductsApi.addVersion).toHaveBeenCalledWith(
+        'product-1',
+        expect.objectContaining({ version: '1.1.0', changelog: 'Update' })
+      )
+    );
+    await waitFor(() => expect(screen.getByLabelText('Version')).toHaveValue(''));
+  });
 });
