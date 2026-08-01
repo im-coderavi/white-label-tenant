@@ -58,7 +58,31 @@ describe('LoginPage', () => {
     expect(login).toHaveBeenCalledWith({
       email: 'a@example.com',
       password: 'longenough1',
-      tenantSubdomain: '',
+      tenantSubdomain: undefined,
+    });
+  });
+
+  it('passes a filled-in store subdomain through unchanged', async () => {
+    const login = vi
+      .fn()
+      .mockResolvedValue({ id: '2', email: 'r@example.com', role: 'reseller_admin', tenantId: 't1' });
+    vi.mocked(AuthContextModule.useAuth).mockReturnValue({
+      user: null,
+      isLoading: false,
+      login,
+      logout: vi.fn(),
+    });
+    renderLoginPage();
+
+    await userEvent.type(screen.getByLabelText('Email'), 'r@example.com');
+    await userEvent.type(screen.getByLabelText('Password'), 'longenough1');
+    await userEvent.type(screen.getByLabelText('Store subdomain (optional)'), 'acme');
+    await userEvent.click(screen.getByRole('button', { name: 'Log in' }));
+
+    expect(login).toHaveBeenCalledWith({
+      email: 'r@example.com',
+      password: 'longenough1',
+      tenantSubdomain: 'acme',
     });
   });
 });

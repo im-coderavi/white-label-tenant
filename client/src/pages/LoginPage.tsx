@@ -34,7 +34,10 @@ export default function LoginPage(): JSX.Element {
   const onSubmit = async (values: LoginFormValues): Promise<void> => {
     setServerError(null);
     try {
-      const user = await login(values);
+      const user = await login({
+        ...values,
+        tenantSubdomain: values.tenantSubdomain ? values.tenantSubdomain : undefined,
+      });
       navigate(roleHomeRoute[user.role] ?? '/login');
     } catch {
       setServerError('Invalid email or password');
