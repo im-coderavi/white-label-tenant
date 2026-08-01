@@ -1,10 +1,17 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { getProduct, updateProduct, archiveProduct, publishProduct } from '../../api/adminProducts';
+import {
+  getProduct,
+  updateProduct,
+  archiveProduct,
+  publishProduct,
+  updateSyncMode,
+} from '../../api/adminProducts';
+import { listTenants } from '../../api/adminTenants';
 import { Button } from '../../components/ui/button';
 
 const updateInfoSchema = z.object({
@@ -45,6 +52,23 @@ export default function ProductDetailPage(): JSX.Element {
       : undefined,
   });
 
+  const [syncMode, setSyncMode] = useState('optional');
+  const [tenantId, setTenantId] = useState('');
+  const [syncModeError, setSyncModeError] = useState<string | null>(null);
+
+  const { data: tenants } = useQuery({
+    queryKey: ['admin-tenants'],
+    queryFn: listTenants,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  useEffect(() => {
+    if (product) {
+      setSyncMode(product.syncMode);
+      setTenantId(product.tenantId ?? '');
+    }
+  }, [product]);
+
   if (isLoading || !product) {
     return <p>Loading...</p>;
   }
@@ -72,6 +96,20 @@ export default function ProductDetailPage(): JSX.Element {
   const handleArchive = async (): Promise<void> => {
     await archiveProduct(product._id);
     await queryClient.invalidateQueries({ queryKey: ['admin-product', id] });
+  };
+
+  const handleSyncModeSubmit = async (e: React.FormEvent): Promise<void> => {
+    e.preventDefault();
+    setSyncModeError(null);
+    try {
+      await updateSyncMode(product._id, {
+        syncMode,
+        tenantId: syncMode === 'private' || syncMode === 'exclusive' ? tenantId : undefined,
+      });
+      await queryClient.invalidateQueries({ queryKey: ['admin-product', id] });
+    } catch {
+      setSyncModeError('Could not update sync mode. Please try again.');
+    }
   };
 
   return (
@@ -107,6 +145,34 @@ export default function ProductDetailPage(): JSX.Element {
       <Button variant="destructive" onClick={handleArchive}>
         Archive
       </Button>
+
+      <form onSubmit={handleSyncModeSubmit}>
+        <label htmlFor="syncMode">Sync mode</label>
+        <select id="syncMode" value={syncMode} onChange={(e) => setSyncMode(e.target.value)}>
+          <option value="global">global</option>
+          <option value="optional">optional</option>
+          <option value="private">private</option>
+          <option value="exclusive">exclusive</option>
+        </select>
+
+        {(syncMode === 'private' || syncMode === 'exclusive') && (
+          <>
+            <label htmlFor="tenantId">Tenant</label>
+            <select id="tenantId" value={tenantId} onChange={(e) => setTenantId(e.target.value)}>
+              <option value="">Select a tenant</option>
+              {tenants?.map((tenant) => (
+                <option key={tenant._id} value={tenant._id}>
+                  {tenant.name} ({tenant.subdomain})
+                </option>
+              ))}
+            </select>
+          </>
+        )}
+
+        {syncModeError && <p role="alert">{syncModeError}</p>}
+
+        <Button type="submit">Update sync mode</Button>
+      </form>
     </div>
   );
 }

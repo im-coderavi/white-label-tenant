@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import ProductDetailPage from './ProductDetailPage';
 import * as adminProductsApi from '../../api/adminProducts';
 import * as adminTenantsApi from '../../api/adminTenants';
+import type { AdminProduct } from '../../api/adminProducts';
 
 vi.mock('../../api/adminProducts', () => ({
   getProduct: vi.fn(),
@@ -20,7 +21,7 @@ vi.mock('../../api/adminTenants', () => ({
   listTenants: vi.fn(),
 }));
 
-const baseProduct = {
+const baseProduct: AdminProduct = {
   _id: 'product-1',
   name: 'Super Tool',
   slug: 'super-tool',
@@ -98,5 +99,33 @@ describe('ProductDetailPage', () => {
 
     await userEvent.click(screen.getByRole('button', { name: 'Archive' }));
     await waitFor(() => expect(adminProductsApi.archiveProduct).toHaveBeenCalledWith('product-1'));
+  });
+
+  it('shows the tenant dropdown only for private/exclusive modes and submits the change', async () => {
+    vi.mocked(adminTenantsApi.listTenants).mockResolvedValueOnce([
+      { _id: 'tenant-1', name: 'Acme', subdomain: 'acme', status: 'active' },
+    ]);
+    vi.mocked(adminProductsApi.updateSyncMode).mockResolvedValueOnce({
+      ...baseProduct,
+      syncMode: 'private',
+      tenantId: 'tenant-1',
+    });
+    renderPage();
+    await screen.findByText('Super Tool');
+
+    expect(screen.queryByLabelText('Tenant')).not.toBeInTheDocument();
+
+    await userEvent.selectOptions(screen.getByLabelText('Sync mode'), 'private');
+    expect(await screen.findByLabelText('Tenant')).toBeInTheDocument();
+
+    await userEvent.selectOptions(screen.getByLabelText('Tenant'), 'tenant-1');
+    await userEvent.click(screen.getByRole('button', { name: 'Update sync mode' }));
+
+    await waitFor(() =>
+      expect(adminProductsApi.updateSyncMode).toHaveBeenCalledWith('product-1', {
+        syncMode: 'private',
+        tenantId: 'tenant-1',
+      })
+    );
   });
 });
