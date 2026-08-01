@@ -13,6 +13,8 @@ import { Tenant } from '../../src/models/Tenant';
 import { Product } from '../../src/models/Product';
 import { Order } from '../../src/models/Order';
 import { License } from '../../src/models/License';
+import { User } from '../../src/models/User';
+import { smtpEmailService } from '../../src/common/smtpEmail';
 
 function buildTestApp() {
   const app = express();
@@ -100,5 +102,35 @@ describe('checkout module — confirm payment', () => {
     expect(res.status).toBe(200);
     expect(res.body.order.status).toBe('paid');
     expect(res.body.order.licenseId).not.toBeNull();
+  });
+
+  it('still confirms payment even when the notification email fails to send', async () => {
+    jest.mocked(smtpEmailService.sendEmail).mockRejectedValueOnce(new Error('SMTP down'));
+
+    const tenant = await Tenant.create({ name: 'Acme', subdomain: 'acme-confirm-4' });
+    const product = await Product.create({ name: 'P', slug: 'p-confirm-4', type: 'software', basePrice: 10 });
+    const user = await User.create({
+      tenantId: tenant._id,
+      role: 'customer',
+      email: 'confirm4@example.com',
+      passwordHash: 'x',
+    });
+    const order = await Order.create({
+      tenantId: tenant._id,
+      customerUserId: user._id,
+      productId: product._id,
+      orderType: 'single_product',
+      amount: 10,
+    });
+
+    const token = signAccessToken({ sub: user._id.toString(), role: 'customer', tenantId: tenant._id.toString() });
+    const res = await request(app)
+      .post(`/api/v1/customer/orders/${order._id.toString()}/confirm-payment`)
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(200);
+    expect(res.body.order.status).toBe('paid');
+
+    const updatedOrder = await Order.findById(order._id);
+    expect(updatedOrder!.status).toBe('paid');
   });
 });

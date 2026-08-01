@@ -8,6 +8,7 @@ import { DownloadToken } from '../../models/DownloadToken';
 import { ConflictError, ForbiddenError, NotFoundError } from '../../common/errors';
 import { mockPaymentGateway } from '../../common/paymentGateway';
 import { smtpEmailService } from '../../common/smtpEmail';
+import { logger } from '../../common/logger';
 
 export interface CreateCheckoutResult {
   orderId: string;
@@ -93,7 +94,14 @@ async function markOrderPaid(order: OrderDocument): Promise<OrderDocument> {
 
   const customer = await User.findById(order.customerUserId);
   if (customer) {
-    await smtpEmailService.sendEmail(customer.email, 'order-paid', { orderId: order._id.toString() });
+    try {
+      await smtpEmailService.sendEmail(customer.email, 'order-paid', { orderId: order._id.toString() });
+    } catch (err) {
+      logger.error('Failed to send order-paid notification email', {
+        orderId: order._id.toString(),
+        error: err instanceof Error ? err.stack : err,
+      });
+    }
   }
 
   return order;
