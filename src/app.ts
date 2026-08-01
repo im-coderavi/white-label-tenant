@@ -9,6 +9,7 @@ import { checkoutRouter } from './modules/checkout/checkout.routes';
 import { plansRouter } from './modules/plans/plans.routes';
 import { publicPlansRouter } from './modules/plans/public.routes';
 import { resellerSignupRouter } from './modules/resellerSignup/resellerSignup.routes';
+import { resellerCatalogRouter } from './modules/resellerCatalog/resellerCatalog.routes';
 import { errorMiddleware } from './middleware/error.middleware';
 
 export function createApp(): Express {
@@ -35,6 +36,7 @@ export function createApp(): Express {
   app.use('/api/v1/admin/plans', plansRouter);
   app.use('/api/v1', publicPlansRouter);
   app.use('/api/v1/auth', resellerSignupRouter);
+  app.use('/api/v1/reseller/products', resellerCatalogRouter);
 
   app.use(errorMiddleware);
   return app;
