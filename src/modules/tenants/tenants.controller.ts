@@ -18,3 +18,12 @@ export async function getTenantHandler(req: Request, res: Response, next: NextFu
     next(err);
   }
 }
+
+export async function listTenantsHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const tenants = await tenantsService.listTenants();
+    res.status(200).json({ tenants });
+  } catch (err) {
+    next(err);
+  }
+}

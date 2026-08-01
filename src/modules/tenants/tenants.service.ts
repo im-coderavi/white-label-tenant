@@ -36,3 +36,7 @@ export async function getTenantBySubdomain(subdomain: string): Promise<TenantDoc
   if (!tenant) throw new NotFoundError('Tenant not found');
   return tenant;
 }
+
+export async function listTenants(): Promise<TenantDocument[]> {
+  return Tenant.find().sort({ createdAt: -1 });
+}

@@ -3,10 +3,11 @@ import { requireAuth } from '../../middleware/auth.middleware';
 import { requireRole } from '../../middleware/rbac.middleware';
 import { validateBody } from '../../middleware/validate.middleware';
 import { createTenantSchema } from './tenants.validators';
-import { createTenantHandler, getTenantHandler } from './tenants.controller';
+import { createTenantHandler, getTenantHandler, listTenantsHandler } from './tenants.controller';
 
 export const tenantsRouter = Router();
 
+tenantsRouter.get('/', requireAuth, requireRole('master_admin'), listTenantsHandler);
 tenantsRouter.post(
   '/',
   requireAuth,
