@@ -16,6 +16,18 @@ export interface CreateCheckoutResult {
   currency: string;
 }
 
+export function computeEffectivePrice(
+  basePrice: number,
+  entitlement: { customPrice: number | null; discountPercent: number | null }
+): number {
+  return (
+    entitlement.customPrice ??
+    (entitlement.discountPercent
+      ? Number((basePrice * (1 - entitlement.discountPercent / 100)).toFixed(2))
+      : basePrice)
+  );
+}
+
 export async function createCheckout(input: {
   productId: string;
   tenantId: string;
@@ -35,11 +47,7 @@ export async function createCheckout(input: {
   }
 
   const orderType = product.type === 'subscription' ? 'subscription' : 'single_product';
-  const amount =
-    entitlement.customPrice ??
-    (entitlement.discountPercent
-      ? Number((product.basePrice * (1 - entitlement.discountPercent / 100)).toFixed(2))
-      : product.basePrice);
+  const amount = computeEffectivePrice(product.basePrice, entitlement);
 
   const order = await Order.create({
     tenantId: input.tenantId,
