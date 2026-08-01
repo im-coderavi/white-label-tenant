@@ -6,10 +6,20 @@ import { Button } from '../../components/ui/button';
 
 interface RowState {
   enabled: boolean;
+  pricingMode: 'default' | 'custom' | 'discount';
+  customPrice: string;
+  discountPercent: string;
+  isFeatured: boolean;
 }
 
 function toRowState(item: ResellerCatalogItem): RowState {
-  return { enabled: item.enabled };
+  return {
+    enabled: item.enabled,
+    pricingMode: item.discountPercent != null ? 'discount' : item.customPrice != null ? 'custom' : 'default',
+    customPrice: item.customPrice != null ? String(item.customPrice) : '',
+    discountPercent: item.discountPercent != null ? String(item.discountPercent) : '',
+    isFeatured: item.isFeatured,
+  };
 }
 
 export default function CatalogPage(): JSX.Element {
@@ -39,7 +49,13 @@ export default function CatalogPage(): JSX.Element {
     const state = rowStates[item._id] ?? toRowState(item);
     setRowErrors((prev) => ({ ...prev, [item._id]: '' }));
     try {
-      await updateCatalogItem(item._id, { enabled: state.enabled });
+      await updateCatalogItem(item._id, {
+        enabled: state.enabled,
+        pricingMode: state.pricingMode,
+        customPrice: state.pricingMode === 'custom' ? Number(state.customPrice) : undefined,
+        discountPercent: state.pricingMode === 'discount' ? Number(state.discountPercent) : undefined,
+        isFeatured: state.isFeatured,
+      });
       await queryClient.invalidateQueries({ queryKey: ['reseller-catalog'] });
     } catch {
       setRowErrors((prev) => ({ ...prev, [item._id]: 'Could not save changes. Please try again.' }));
@@ -61,6 +77,8 @@ export default function CatalogPage(): JSX.Element {
             <th>Base price</th>
             <th>Sync mode</th>
             <th>Enabled</th>
+            <th>Pricing</th>
+            <th>Featured</th>
             <th></th>
           </tr>
         </thead>
@@ -80,6 +98,50 @@ export default function CatalogPage(): JSX.Element {
                     checked={state.enabled}
                     disabled={item.syncMode === 'global'}
                     onChange={(e) => updateRow(item._id, { enabled: e.target.checked })}
+                  />
+                </td>
+                <td>
+                  <label htmlFor={`pricing-mode-${item._id}`}>Pricing mode</label>
+                  <select
+                    id={`pricing-mode-${item._id}`}
+                    value={state.pricingMode}
+                    onChange={(e) =>
+                      updateRow(item._id, { pricingMode: e.target.value as RowState['pricingMode'] })
+                    }
+                  >
+                    <option value="default">Default price</option>
+                    <option value="custom">Custom price</option>
+                    <option value="discount">Discount %</option>
+                  </select>
+                  {state.pricingMode === 'custom' && (
+                    <>
+                      <label htmlFor={`custom-price-${item._id}`}>Custom price</label>
+                      <input
+                        id={`custom-price-${item._id}`}
+                        type="number"
+                        value={state.customPrice}
+                        onChange={(e) => updateRow(item._id, { customPrice: e.target.value })}
+                      />
+                    </>
+                  )}
+                  {state.pricingMode === 'discount' && (
+                    <>
+                      <label htmlFor={`discount-percent-${item._id}`}>Discount percent</label>
+                      <input
+                        id={`discount-percent-${item._id}`}
+                        type="number"
+                        value={state.discountPercent}
+                        onChange={(e) => updateRow(item._id, { discountPercent: e.target.value })}
+                      />
+                    </>
+                  )}
+                </td>
+                <td>
+                  <input
+                    type="checkbox"
+                    aria-label="Featured"
+                    checked={state.isFeatured}
+                    onChange={(e) => updateRow(item._id, { isFeatured: e.target.checked })}
                   />
                 </td>
                 <td>

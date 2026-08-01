@@ -90,4 +90,66 @@ describe('CatalogPage', () => {
       'Could not save changes. Please try again.'
     );
   });
+
+  it('switches to custom pricing, reveals the price input, and saves it', async () => {
+    vi.mocked(resellerCatalogApi.listCatalog).mockResolvedValueOnce([optionalItem]);
+    vi.mocked(resellerCatalogApi.updateCatalogItem).mockResolvedValueOnce({
+      ...optionalItem,
+      customPrice: 150,
+    });
+    renderPage();
+
+    const row = (await screen.findByText('Optional Tool')).closest('tr') as HTMLElement;
+    await userEvent.selectOptions(within(row).getByLabelText('Pricing mode'), 'custom');
+    await userEvent.type(within(row).getByLabelText('Custom price'), '150');
+    await userEvent.click(within(row).getByRole('button', { name: 'Save' }));
+
+    await waitFor(() =>
+      expect(resellerCatalogApi.updateCatalogItem).toHaveBeenCalledWith(
+        'rp-2',
+        expect.objectContaining({ pricingMode: 'custom', customPrice: 150 })
+      )
+    );
+  });
+
+  it('switches to discount pricing, reveals the percent input, and saves it', async () => {
+    vi.mocked(resellerCatalogApi.listCatalog).mockResolvedValueOnce([optionalItem]);
+    vi.mocked(resellerCatalogApi.updateCatalogItem).mockResolvedValueOnce({
+      ...optionalItem,
+      discountPercent: 15,
+    });
+    renderPage();
+
+    const row = (await screen.findByText('Optional Tool')).closest('tr') as HTMLElement;
+    await userEvent.selectOptions(within(row).getByLabelText('Pricing mode'), 'discount');
+    await userEvent.type(within(row).getByLabelText('Discount percent'), '15');
+    await userEvent.click(within(row).getByRole('button', { name: 'Save' }));
+
+    await waitFor(() =>
+      expect(resellerCatalogApi.updateCatalogItem).toHaveBeenCalledWith(
+        'rp-2',
+        expect.objectContaining({ pricingMode: 'discount', discountPercent: 15 })
+      )
+    );
+  });
+
+  it('toggles featured and saves', async () => {
+    vi.mocked(resellerCatalogApi.listCatalog).mockResolvedValueOnce([optionalItem]);
+    vi.mocked(resellerCatalogApi.updateCatalogItem).mockResolvedValueOnce({
+      ...optionalItem,
+      isFeatured: true,
+    });
+    renderPage();
+
+    const row = (await screen.findByText('Optional Tool')).closest('tr') as HTMLElement;
+    await userEvent.click(within(row).getByRole('checkbox', { name: 'Featured' }));
+    await userEvent.click(within(row).getByRole('button', { name: 'Save' }));
+
+    await waitFor(() =>
+      expect(resellerCatalogApi.updateCatalogItem).toHaveBeenCalledWith(
+        'rp-2',
+        expect.objectContaining({ isFeatured: true })
+      )
+    );
+  });
 });
