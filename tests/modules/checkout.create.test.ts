@@ -103,4 +103,57 @@ describe('checkout module — create checkout', () => {
       .send({ productId: product._id.toString() });
     expect(res.status).toBe(404);
   });
+
+  it('applies a discountPercent when no customPrice is set', async () => {
+    const tenant = await Tenant.create({ name: 'Acme', subdomain: 'acme-checkout-discount' });
+    const product = await Product.create({
+      name: 'P',
+      slug: 'p-discount',
+      type: 'software',
+      basePrice: 500,
+      status: 'published',
+    });
+    await ResellerProduct.create({
+      tenantId: tenant._id,
+      productId: product._id,
+      enabled: true,
+      discountPercent: 20,
+    });
+
+    const token = signAccessToken({
+      sub: new mongoose.Types.ObjectId().toString(),
+      role: 'customer',
+      tenantId: tenant._id.toString(),
+    });
+    const res = await request(app)
+      .post('/api/v1/customer/checkout')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ productId: product._id.toString() });
+    expect(res.status).toBe(201);
+    expect(res.body.amount).toBe(400);
+  });
+
+  it('falls back to basePrice when neither customPrice nor discountPercent is set', async () => {
+    const tenant = await Tenant.create({ name: 'Acme', subdomain: 'acme-checkout-neither' });
+    const product = await Product.create({
+      name: 'P',
+      slug: 'p-neither',
+      type: 'software',
+      basePrice: 500,
+      status: 'published',
+    });
+    await ResellerProduct.create({ tenantId: tenant._id, productId: product._id, enabled: true });
+
+    const token = signAccessToken({
+      sub: new mongoose.Types.ObjectId().toString(),
+      role: 'customer',
+      tenantId: tenant._id.toString(),
+    });
+    const res = await request(app)
+      .post('/api/v1/customer/checkout')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ productId: product._id.toString() });
+    expect(res.status).toBe(201);
+    expect(res.body.amount).toBe(500);
+  });
 });
