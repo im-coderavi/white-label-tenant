@@ -53,8 +53,14 @@ describe('tenant creation — global product auto-sync', () => {
     expect(row!.enabled).toBe(true);
   });
 
-  it('does not enable optional products for a new tenant', async () => {
-    await Product.create({ name: 'Opt', slug: 'opt', type: 'software', basePrice: 10, syncMode: 'optional' });
+  it('creates a disabled row for existing optional products for a new tenant', async () => {
+    const product = await Product.create({
+      name: 'Opt',
+      slug: 'opt',
+      type: 'software',
+      basePrice: 10,
+      syncMode: 'optional',
+    });
 
     const res = await request(app)
       .post('/api/v1/tenants')
@@ -62,7 +68,8 @@ describe('tenant creation — global product auto-sync', () => {
       .send({ name: 'Another Reseller', subdomain: 'another-reseller' });
     expect(res.status).toBe(201);
 
-    const rows = await ResellerProduct.find({ tenantId: res.body.tenant._id });
-    expect(rows).toHaveLength(0);
+    const row = await ResellerProduct.findOne({ tenantId: res.body.tenant._id, productId: product._id });
+    expect(row).not.toBeNull();
+    expect(row!.enabled).toBe(false);
   });
 });

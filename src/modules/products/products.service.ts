@@ -199,7 +199,18 @@ export async function syncProductToTenants(product: ProductDocument): Promise<vo
     return;
   }
 
-  // 'optional' mode — no-op, resellers opt in manually (future sub-project)
+  if (product.syncMode === 'optional') {
+    const tenants = await Tenant.find();
+    await Promise.all(
+      tenants.map((tenant) =>
+        ResellerProduct.findOneAndUpdate(
+          { tenantId: tenant._id, productId: product._id },
+          { $setOnInsert: { tenantId: tenant._id, productId: product._id, enabled: false } },
+          { upsert: true, new: true }
+        )
+      )
+    );
+  }
 }
 
 export async function forceSync(id: string): Promise<ProductDocument> {

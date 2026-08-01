@@ -22,6 +22,17 @@ export async function createTenant(input: { name: string; subdomain: string }): 
     )
   );
 
+  const optionalProducts = await Product.find({ syncMode: 'optional' });
+  await Promise.all(
+    optionalProducts.map((product) =>
+      ResellerProduct.findOneAndUpdate(
+        { tenantId: tenant._id, productId: product._id },
+        { $setOnInsert: { tenantId: tenant._id, productId: product._id, enabled: false } },
+        { upsert: true, new: true }
+      )
+    )
+  );
+
   return tenant;
 }
 

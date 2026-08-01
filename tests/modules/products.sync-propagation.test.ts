@@ -37,7 +37,7 @@ describe('syncProductToTenants', () => {
     expect(rows.every((r) => r.enabled)).toBe(true);
   });
 
-  it('does nothing for optional mode', async () => {
+  it('creates a disabled row for every tenant when set to optional', async () => {
     await Tenant.create({ name: 'A', subdomain: 'a' });
     const product = await Product.create({
       name: 'P',
@@ -50,7 +50,25 @@ describe('syncProductToTenants', () => {
     await syncProductToTenants(product);
 
     const rows = await ResellerProduct.find({ productId: product._id });
-    expect(rows).toHaveLength(0);
+    expect(rows).toHaveLength(1);
+    expect(rows.every((r) => !r.enabled)).toBe(true);
+  });
+
+  it('does not reset an already-enabled optional row when re-synced', async () => {
+    const tenant = await Tenant.create({ name: 'A', subdomain: 'a' });
+    const product = await Product.create({
+      name: 'P',
+      slug: 'p',
+      type: 'software',
+      basePrice: 10,
+      syncMode: 'optional',
+    });
+    await ResellerProduct.create({ tenantId: tenant._id, productId: product._id, enabled: true });
+
+    await syncProductToTenants(product);
+
+    const row = await ResellerProduct.findOne({ tenantId: tenant._id, productId: product._id });
+    expect(row!.enabled).toBe(true);
   });
 
   it('enables only the assigned tenant for private mode and disables others', async () => {
