@@ -9,7 +9,9 @@ import ProductFormPage from './pages/admin/ProductFormPage';
 import ProductDetailPage from './pages/admin/ProductDetailPage';
 import ResellerLayout from './pages/reseller/ResellerLayout';
 import CatalogPage from './pages/reseller/CatalogPage';
-import CustomerHomePage from './pages/CustomerHomePage';
+import CustomerLayout from './pages/customer/CustomerLayout';
+import StorefrontPage from './pages/customer/StorefrontPage';
+import OrderConfirmationPage from './pages/customer/OrderConfirmationPage';
 import { ProtectedRoute } from './auth/ProtectedRoute';
 
 export default function App(): JSX.Element {
@@ -48,10 +50,14 @@ export default function App(): JSX.Element {
         path="/account"
         element={
           <ProtectedRoute allowedRoles={['customer']}>
-            <CustomerHomePage />
+            <CustomerLayout />
           </ProtectedRoute>
         }
-      />
+      >
+        <Route index element={<Navigate to="/account/store" replace />} />
+        <Route path="store" element={<StorefrontPage />} />
+        <Route path="orders/:orderId" element={<OrderConfirmationPage />} />
+      </Route>
     </Routes>
   );
 }
