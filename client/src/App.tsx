@@ -5,10 +5,13 @@ import RegisterCustomerPage from './pages/RegisterCustomerPage';
 import RegisterResellerPage from './pages/RegisterResellerPage';
 import UnauthorizedPage from './pages/UnauthorizedPage';
 import AdminLayout from './pages/admin/AdminLayout';
+import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 import ProductsListPage from './pages/admin/ProductsListPage';
 import ProductFormPage from './pages/admin/ProductFormPage';
 import ProductDetailPage from './pages/admin/ProductDetailPage';
 import ResellerLayout from './pages/reseller/ResellerLayout';
+import ResellerDashboardPage from './pages/reseller/ResellerDashboardPage';
+import ResellerOrdersPage from './pages/reseller/ResellerOrdersPage';
 import CatalogPage from './pages/reseller/CatalogPage';
 import CustomerLayout from './pages/customer/CustomerLayout';
 import StorefrontPage from './pages/customer/StorefrontPage';
@@ -33,7 +36,7 @@ export default function App(): JSX.Element {
           </ProtectedRoute>
         }
       >
-        <Route index element={<Navigate to="/admin/products" replace />} />
+        <Route index element={<AdminDashboardPage />} />
         <Route path="products" element={<ProductsListPage />} />
         <Route path="products/new" element={<ProductFormPage />} />
         <Route path="products/:id" element={<ProductDetailPage />} />
@@ -46,8 +49,9 @@ export default function App(): JSX.Element {
           </ProtectedRoute>
         }
       >
-        <Route index element={<Navigate to="/reseller/catalog" replace />} />
+        <Route index element={<ResellerDashboardPage />} />
         <Route path="catalog" element={<CatalogPage />} />
+        <Route path="orders" element={<ResellerOrdersPage />} />
       </Route>
       <Route
         path="/account"

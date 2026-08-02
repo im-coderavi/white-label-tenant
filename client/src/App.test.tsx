@@ -37,7 +37,7 @@ describe('App', () => {
     expect(await screen.findByRole('heading', { level: 1 })).toHaveTextContent('Every sale ships a key');
   });
 
-  it('logs in as master_admin and lands on the admin products page', async () => {
+  it('logs in as master_admin and lands on the platform overview', async () => {
     vi.mocked(api.post).mockResolvedValueOnce({
       data: {
         accessToken: 'access-1',
@@ -45,8 +45,20 @@ describe('App', () => {
         user: { id: '1', email: 'admin@example.com', role: 'master_admin', tenantId: null },
       },
     });
-    vi.mocked(api.get).mockResolvedValueOnce({
-      data: { items: [], total: 0, page: 1, limit: 20 },
+    // One payload covering every key the landing area might read.
+    vi.mocked(api.get).mockResolvedValue({
+      data: {
+        stats: {
+          tenantsTotal: 0,
+          tenantsActive: 0,
+          productsTotal: 0,
+          productsPublished: 0,
+          subscriptionsActive: 0,
+          ordersPaid: 0,
+          revenue: 0,
+          licensesIssued: 0,
+        },
+      },
     });
 
     renderApp('/login');
@@ -55,10 +67,10 @@ describe('App', () => {
     await userEvent.type(screen.getByLabelText('Password'), 'longenough1');
     await userEvent.click(screen.getByRole('button', { name: 'Log in' }));
 
-    expect(await screen.findByRole('heading', { name: 'Products' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Overview' })).toBeInTheDocument();
   });
 
-  it('logs in as reseller_admin and lands on the catalog page', async () => {
+  it('logs in as reseller_admin and lands on the store dashboard', async () => {
     vi.mocked(api.post).mockResolvedValueOnce({
       data: {
         accessToken: 'access-2',
@@ -66,7 +78,19 @@ describe('App', () => {
         user: { id: '2', email: 'reseller@example.com', role: 'reseller_admin', tenantId: 'tenant-1' },
       },
     });
-    vi.mocked(api.get).mockResolvedValueOnce({ data: { items: [] } });
+    vi.mocked(api.get).mockResolvedValue({
+      data: {
+        subscription: null,
+        stats: {
+          catalogTotal: 0,
+          catalogLive: 0,
+          ordersTotal: 0,
+          ordersPaid: 0,
+          revenue: 0,
+          customers: 0,
+        },
+      },
+    });
 
     renderApp('/login');
 
@@ -74,7 +98,7 @@ describe('App', () => {
     await userEvent.type(screen.getByLabelText('Password'), 'longenough1');
     await userEvent.click(screen.getByRole('button', { name: 'Log in' }));
 
-    expect(await screen.findByRole('heading', { name: 'Catalog' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Dashboard' })).toBeInTheDocument();
   });
 
   it('logs in as customer and lands on the store page', async () => {
