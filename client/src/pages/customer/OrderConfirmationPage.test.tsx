@@ -7,6 +7,7 @@ import * as customerOrdersApi from '../../api/customerOrders';
 
 vi.mock('../../api/customerOrders', () => ({
   confirmPayment: vi.fn(),
+  listMyLicenses: vi.fn(),
 }));
 
 function renderPage(state?: object) {
@@ -23,6 +24,7 @@ function renderPage(state?: object) {
 describe('OrderConfirmationPage', () => {
   beforeEach(() => {
     vi.mocked(customerOrdersApi.confirmPayment).mockReset();
+    vi.mocked(customerOrdersApi.listMyLicenses).mockReset().mockResolvedValue([]);
   });
 
   it('shows a not-found state when navigation state is missing', () => {
@@ -48,6 +50,43 @@ describe('OrderConfirmationPage', () => {
 
     expect(await screen.findByText('paid')).toBeInTheDocument();
     expect(customerOrdersApi.confirmPayment).toHaveBeenCalledWith('order-1');
+  });
+
+  it('shows the license key issued for this order after payment', async () => {
+    vi.mocked(customerOrdersApi.confirmPayment).mockResolvedValueOnce({
+      _id: 'order-1',
+      productId: 'p1',
+      amount: 180,
+      currency: 'INR',
+      status: 'paid',
+    });
+    vi.mocked(customerOrdersApi.listMyLicenses).mockResolvedValueOnce([
+      {
+        _id: 'lic-other',
+        key: 'TZP-2026-OTHER123',
+        productId: 'p9',
+        orderId: 'order-9',
+        status: 'assigned',
+        activationLimit: 1,
+        activationsUsed: 0,
+      },
+      {
+        _id: 'lic-1',
+        key: 'TZP-2026-ABCD1234',
+        productId: 'p1',
+        orderId: 'order-1',
+        status: 'assigned',
+        activationLimit: 3,
+        activationsUsed: 1,
+      },
+    ]);
+    renderPage({ orderId: 'order-1', gatewayOrderId: 'mock_order_1', amount: 180, currency: 'INR' });
+
+    await userEvent.click(screen.getByRole('button', { name: 'Simulate Payment' }));
+
+    expect(await screen.findByText('TZP-2026-ABCD1234')).toBeInTheDocument();
+    expect(screen.getByText('Activations used 1 of 3')).toBeInTheDocument();
+    expect(screen.queryByText('TZP-2026-OTHER123')).not.toBeInTheDocument();
   });
 
   it('shows an inline error when confirmation fails', async () => {

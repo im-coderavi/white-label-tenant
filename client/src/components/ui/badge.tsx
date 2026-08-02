@@ -3,7 +3,7 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '../../lib/utils';
 
 const badgeVariants = cva(
-  'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium capitalize',
+  'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium',
   {
     variants: {
       tone: {
@@ -55,7 +55,7 @@ export function statusTone(status: string): BadgeProps['tone'] {
 
 export function StatusBadge({ status, className }: { status: string; className?: string }): JSX.Element {
   return (
-    <Badge tone={statusTone(status)} className={className}>
+    <Badge tone={statusTone(status)} className={cn('capitalize', className)}>
       {status}
     </Badge>
   );

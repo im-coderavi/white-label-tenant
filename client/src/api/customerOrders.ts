@@ -24,3 +24,18 @@ export async function confirmPayment(orderId: string): Promise<CustomerOrder> {
   const res = await api.post<{ order: CustomerOrder }>(`/customer/orders/${orderId}/confirm-payment`);
   return res.data.order;
 }
+
+export interface CustomerLicense {
+  _id: string;
+  key: string;
+  productId: string;
+  orderId: string | null;
+  status: string;
+  activationLimit: number;
+  activationsUsed: number;
+}
+
+export async function listMyLicenses(): Promise<CustomerLicense[]> {
+  const res = await api.get<{ licenses: CustomerLicense[] }>('/customer/licenses');
+  return res.data.licenses;
+}

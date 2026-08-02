@@ -8,7 +8,8 @@
     "start": "node dist/server.js",
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "test": "jest --runInBand",
-    "seed:master-admin": "ts-node src/scripts/seedMasterAdmin.ts"
+    "seed:master-admin": "ts-node src/scripts/seedMasterAdmin.ts",
+    "seed:demo": "ts-node src/scripts/seedDemoData.ts"
   },
   "dependencies": {
     "bcrypt": "^5.1.1",
