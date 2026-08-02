@@ -13,6 +13,7 @@ import { resellerCatalogRouter } from './modules/resellerCatalog/resellerCatalog
 import { storefrontRouter } from './modules/storefront/storefront.routes';
 import { resellerAccountRouter } from './modules/resellerAccount/resellerAccount.routes';
 import { adminStatsRouter } from './modules/adminStats/adminStats.routes';
+import { publicStoreRouter } from './modules/publicStore/publicStore.routes';
 import { errorMiddleware } from './middleware/error.middleware';
 
 export function createApp(): Express {
@@ -44,6 +45,7 @@ export function createApp(): Express {
   // Mounted after the catalog router so /reseller/products keeps resolving there.
   app.use('/api/v1/reseller', resellerAccountRouter);
   app.use('/api/v1/admin/stats', adminStatsRouter);
+  app.use('/api/v1/public', publicStoreRouter);
 
   app.use(errorMiddleware);
   return app;

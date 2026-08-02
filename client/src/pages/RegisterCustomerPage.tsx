@@ -3,15 +3,18 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { MailCheck } from 'lucide-react';
+import { MailCheck, Store } from 'lucide-react';
 import { api } from '../lib/api';
+import { useCurrentStore } from '../lib/useCurrentStore';
 import { Button } from '../components/ui/button';
 import { Input, Label, FieldError } from '../components/ui/input';
 import { Alert } from '../components/ui/alert';
+import { Badge } from '../components/ui/badge';
 import { AuthLayout } from '../components/layout/AuthLayout';
 
 const registerSchema = z.object({
-  tenantSubdomain: z.string().min(3, 'Enter your store subdomain'),
+  // Optional in the schema because a storefront host supplies it instead of the visitor.
+  tenantSubdomain: z.string().optional(),
   email: z.string().email('Enter a valid email'),
   password: z.string().min(8, 'Password must be at least 8 characters'),
 });
@@ -27,16 +30,24 @@ const HIGHLIGHTS = [
 export default function RegisterCustomerPage(): JSX.Element {
   const [success, setSuccess] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
+  const { subdomain, store } = useCurrentStore();
   const {
     register,
     handleSubmit,
+    setError,
     formState: { errors, isSubmitting },
   } = useForm<RegisterFormValues>({ resolver: zodResolver(registerSchema) });
 
   const onSubmit = async (values: RegisterFormValues): Promise<void> => {
     setServerError(null);
+    // On a storefront host the subdomain comes from the URL, so it is never typed.
+    const tenantSubdomain = subdomain ?? values.tenantSubdomain;
+    if (!tenantSubdomain || tenantSubdomain.length < 3) {
+      setError('tenantSubdomain', { message: 'Enter your store subdomain' });
+      return;
+    }
     try {
-      await api.post('/auth/register', values);
+      await api.post('/auth/register', { ...values, tenantSubdomain });
       setSuccess(true);
     } catch {
       setServerError('Registration failed. Please check your details and try again.');
@@ -75,15 +86,22 @@ export default function RegisterCustomerPage(): JSX.Element {
       }
     >
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4" noValidate>
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="tenantSubdomain">Store subdomain</Label>
-          <Input id="tenantSubdomain" placeholder="acme" {...register('tenantSubdomain')} />
-          {errors.tenantSubdomain ? (
-            <FieldError>{errors.tenantSubdomain.message}</FieldError>
-          ) : (
-            <p className="text-xs text-muted">The store you are buying from.</p>
-          )}
-        </div>
+        {subdomain ? (
+          <Badge tone="brand" className="w-fit">
+            <Store className="size-3" aria-hidden="true" />
+            Joining {store?.name ?? subdomain}
+          </Badge>
+        ) : (
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="tenantSubdomain">Store subdomain</Label>
+            <Input id="tenantSubdomain" placeholder="acme" {...register('tenantSubdomain')} />
+            {errors.tenantSubdomain ? (
+              <FieldError>{errors.tenantSubdomain.message}</FieldError>
+            ) : (
+              <p className="text-xs text-muted">The store you are buying from.</p>
+            )}
+          </div>
+        )}
 
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="email">Email</Label>

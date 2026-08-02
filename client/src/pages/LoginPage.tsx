@@ -3,10 +3,13 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
+import { Store } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
+import { useCurrentStore } from '../lib/useCurrentStore';
 import { Button } from '../components/ui/button';
 import { Input, Label, FieldError } from '../components/ui/input';
 import { Alert } from '../components/ui/alert';
+import { Badge } from '../components/ui/badge';
 import { AuthLayout } from '../components/layout/AuthLayout';
 
 const loginSchema = z.object({
@@ -28,6 +31,7 @@ export default function LoginPage(): JSX.Element {
   const { login } = useAuth();
   const navigate = useNavigate();
   const [serverError, setServerError] = useState<string | null>(null);
+  const { subdomain, store } = useCurrentStore();
   const {
     register,
     handleSubmit,
@@ -37,10 +41,9 @@ export default function LoginPage(): JSX.Element {
   const onSubmit = async (values: LoginFormValues): Promise<void> => {
     setServerError(null);
     try {
-      const user = await login({
-        ...values,
-        tenantSubdomain: values.tenantSubdomain ? values.tenantSubdomain : undefined,
-      });
+      // On a storefront host the subdomain comes from the URL, so it is never typed.
+      const tenantSubdomain = subdomain ?? (values.tenantSubdomain || undefined);
+      const user = await login({ ...values, tenantSubdomain });
       navigate(roleHomeRoute[user.role] ?? '/login');
     } catch {
       setServerError('Invalid email or password');
@@ -83,11 +86,18 @@ export default function LoginPage(): JSX.Element {
           {errors.password && <FieldError>{errors.password.message}</FieldError>}
         </div>
 
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="tenantSubdomain">Store subdomain (optional)</Label>
-          <Input id="tenantSubdomain" placeholder="acme" {...register('tenantSubdomain')} />
-          <p className="text-xs text-muted">Leave blank if you sign in as the platform owner.</p>
-        </div>
+        {subdomain ? (
+          <Badge tone="brand" className="w-fit">
+            <Store className="size-3" aria-hidden="true" />
+            Signing in to {store?.name ?? subdomain}
+          </Badge>
+        ) : (
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="tenantSubdomain">Store subdomain (optional)</Label>
+            <Input id="tenantSubdomain" placeholder="acme" {...register('tenantSubdomain')} />
+            <p className="text-xs text-muted">Leave blank if you sign in as the platform owner.</p>
+          </div>
+        )}
 
         {serverError && <Alert>{serverError}</Alert>}
 
