@@ -40,12 +40,13 @@ describe('OrderConfirmationPage', () => {
     });
     renderPage({ orderId: 'order-1', gatewayOrderId: 'mock_order_1', amount: 180, currency: 'INR' });
 
-    expect(screen.getByText('Amount: 180 INR')).toBeInTheDocument();
-    expect(screen.getByText('Status: pending')).toBeInTheDocument();
+    // Amount and status render as a summary list with the status as a badge.
+    expect(screen.getByText('180 INR')).toBeInTheDocument();
+    expect(screen.getByText('pending')).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole('button', { name: 'Simulate Payment' }));
 
-    expect(await screen.findByText('Status: paid')).toBeInTheDocument();
+    expect(await screen.findByText('paid')).toBeInTheDocument();
     expect(customerOrdersApi.confirmPayment).toHaveBeenCalledWith('order-1');
   });
 
