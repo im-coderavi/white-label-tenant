@@ -1,12 +1,21 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { MemoryRouter } from 'react-router-dom';
 import RegisterCustomerPage from './RegisterCustomerPage';
 import { api } from '../lib/api';
 
 vi.mock('../lib/api', () => ({
   api: { post: vi.fn() },
 }));
+
+function renderPage(): void {
+  render(
+    <MemoryRouter>
+      <RegisterCustomerPage />
+    </MemoryRouter>
+  );
+}
 
 describe('RegisterCustomerPage', () => {
   beforeEach(() => {
@@ -15,7 +24,7 @@ describe('RegisterCustomerPage', () => {
 
   it('shows a success message after registering', async () => {
     vi.mocked(api.post).mockResolvedValueOnce({ data: { user: { id: '1', status: 'pending' } } });
-    render(<RegisterCustomerPage />);
+    renderPage();
 
     await userEvent.type(screen.getByLabelText('Store subdomain'), 'acme');
     await userEvent.type(screen.getByLabelText('Email'), 'buyer@example.com');
@@ -31,7 +40,7 @@ describe('RegisterCustomerPage', () => {
   });
 
   it('shows validation error for a short password', async () => {
-    render(<RegisterCustomerPage />);
+    renderPage();
     await userEvent.type(screen.getByLabelText('Store subdomain'), 'acme');
     await userEvent.type(screen.getByLabelText('Email'), 'buyer@example.com');
     await userEvent.type(screen.getByLabelText('Password'), 'short');

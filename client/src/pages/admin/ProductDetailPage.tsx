@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { ArrowLeft, Archive, History, Send, Share2 } from 'lucide-react';
 import {
   getProduct,
   updateProduct,
@@ -15,6 +16,10 @@ import {
 } from '../../api/adminProducts';
 import { listTenants } from '../../api/adminTenants';
 import { Button } from '../../components/ui/button';
+import { Input, Textarea, Select, Label, FieldError } from '../../components/ui/input';
+import { Alert } from '../../components/ui/alert';
+import { StatusBadge } from '../../components/ui/badge';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '../../components/ui/card';
 
 const updateInfoSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -93,7 +98,7 @@ export default function ProductDetailPage(): JSX.Element {
   });
 
   if (isLoading || !product) {
-    return <p>Loading...</p>;
+    return <p className="text-sm text-muted">Loading...</p>;
   }
 
   const onSubmitInfo = async (values: UpdateInfoFormValues): Promise<void> => {
@@ -144,93 +149,201 @@ export default function ProductDetailPage(): JSX.Element {
   };
 
   return (
-    <div>
-      <h1>{product.name}</h1>
-      <p>Status: {product.status}</p>
+    <div className="flex flex-col gap-6">
+      <div>
+        <Link
+          to="/admin/products"
+          className="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-muted hover:text-foreground"
+        >
+          <ArrowLeft className="size-4" aria-hidden="true" />
+          Back to products
+        </Link>
 
-      <form onSubmit={handleSubmit(onSubmitInfo)}>
-        <label htmlFor="name">Name</label>
-        <input id="name" {...register('name')} />
-        {errors.name && <p>{errors.name.message}</p>}
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div className="min-w-0">
+            <p className="mb-1.5 text-eyebrow uppercase text-primary">{product.type.replace('_', ' ')}</p>
+            <div className="flex flex-wrap items-center gap-3">
+              <h1 className="text-2xl font-bold sm:text-[1.75rem]">{product.name}</h1>
+              <StatusBadge status={product.status} />
+            </div>
+            <p className="mt-1.5 font-mono text-xs text-muted">/{product.slug}</p>
+          </div>
+          <div className="flex shrink-0 flex-wrap items-center gap-2">
+            <Button onClick={handlePublish}>
+              <Send aria-hidden="true" />
+              Publish
+            </Button>
+            <Button variant="destructive" onClick={handleArchive}>
+              <Archive aria-hidden="true" />
+              Archive
+            </Button>
+          </div>
+        </div>
+      </div>
 
-        <label htmlFor="description">Description</label>
-        <textarea id="description" {...register('description')} />
+      {publishError && <Alert>{publishError}</Alert>}
 
-        <label htmlFor="basePrice">Base price</label>
-        <input id="basePrice" type="number" {...register('basePrice')} />
-        {errors.basePrice && <p>{errors.basePrice.message}</p>}
+      <div className="grid gap-6 lg:grid-cols-3">
+        <div className="flex flex-col gap-6 lg:col-span-2">
+          <form onSubmit={handleSubmit(onSubmitInfo)} noValidate>
+            <Card>
+              <CardHeader>
+                <CardTitle>Product details</CardTitle>
+                <CardDescription>Shown to every reseller who lists this product.</CardDescription>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-5">
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="name">Name</Label>
+                  <Input id="name" {...register('name')} />
+                  {errors.name && <FieldError>{errors.name.message}</FieldError>}
+                </div>
 
-        <label htmlFor="thumbnail">Thumbnail</label>
-        <input id="thumbnail" type="file" onChange={(e) => setThumbnail(e.target.files?.[0])} />
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea id="description" {...register('description')} />
+                </div>
 
-        {infoError && <p role="alert">{infoError}</p>}
+                <div className="grid gap-5 sm:grid-cols-2">
+                  <div className="flex flex-col gap-1.5">
+                    <Label htmlFor="basePrice">Base price</Label>
+                    <Input id="basePrice" type="number" {...register('basePrice')} />
+                    {errors.basePrice && <FieldError>{errors.basePrice.message}</FieldError>}
+                  </div>
 
-        <Button type="submit" disabled={isSubmitting}>
-          Save changes
-        </Button>
-      </form>
+                  <div className="flex flex-col gap-1.5">
+                    <Label htmlFor="thumbnail">Thumbnail</Label>
+                    <Input
+                      id="thumbnail"
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => setThumbnail(e.target.files?.[0])}
+                    />
+                  </div>
+                </div>
 
-      <Button onClick={handlePublish}>Publish</Button>
-      {publishError && <p role="alert">{publishError}</p>}
+                {infoError && <Alert>{infoError}</Alert>}
+              </CardContent>
+              <CardFooter className="justify-end">
+                <Button type="submit" disabled={isSubmitting}>
+                  Save changes
+                </Button>
+              </CardFooter>
+            </Card>
+          </form>
 
-      <Button variant="destructive" onClick={handleArchive}>
-        Archive
-      </Button>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <History className="size-4 text-muted" aria-hidden="true" />
+                Versions
+              </CardTitle>
+              <CardDescription>A product needs at least one version before it can be published.</CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-5">
+              {versions && versions.length > 0 ? (
+                <ul className="flex flex-col gap-2">
+                  {versions.map((version) => (
+                    <li
+                      key={version._id}
+                      className="flex flex-wrap items-baseline gap-x-3 gap-y-1 rounded-md border border-border bg-secondary/40 px-3.5 py-2.5"
+                    >
+                      <strong className="font-mono text-sm font-bold text-foreground">
+                        {version.version}
+                      </strong>
+                      <span className="text-sm text-muted">{version.changelog}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-muted">No versions yet.</p>
+              )}
 
-      <form onSubmit={handleSyncModeSubmit}>
-        <label htmlFor="syncMode">Sync mode</label>
-        <select id="syncMode" value={syncMode} onChange={(e) => setSyncMode(e.target.value)}>
-          <option value="global">global</option>
-          <option value="optional">optional</option>
-          <option value="private">private</option>
-          <option value="exclusive">exclusive</option>
-        </select>
+              <form
+                onSubmit={handleSubmitVersion(onSubmitVersion)}
+                className="flex flex-col gap-4 border-t border-border pt-5"
+                noValidate
+              >
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="flex flex-col gap-1.5">
+                    <Label htmlFor="version">Version</Label>
+                    <Input id="version" placeholder="1.0.0" {...registerVersion('version')} />
+                    {versionErrors.version && <FieldError>{versionErrors.version.message}</FieldError>}
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <Label htmlFor="versionFile">File</Label>
+                    <Input
+                      id="versionFile"
+                      type="file"
+                      onChange={(e) => setVersionFile(e.target.files?.[0])}
+                    />
+                  </div>
+                </div>
 
-        {(syncMode === 'private' || syncMode === 'exclusive') && (
-          <>
-            <label htmlFor="tenantId">Tenant</label>
-            <select id="tenantId" value={tenantId} onChange={(e) => setTenantId(e.target.value)}>
-              <option value="">Select a tenant</option>
-              {tenants?.map((tenant) => (
-                <option key={tenant._id} value={tenant._id}>
-                  {tenant.name} ({tenant.subdomain})
-                </option>
-              ))}
-            </select>
-          </>
-        )}
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="changelog">Changelog</Label>
+                  <Textarea id="changelog" placeholder="What changed in this release?" {...registerVersion('changelog')} />
+                </div>
 
-        {syncModeError && <p role="alert">{syncModeError}</p>}
+                <div className="flex justify-end">
+                  <Button type="submit" variant="outline" disabled={isSubmittingVersion}>
+                    Add version
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
 
-        <Button type="submit">Update sync mode</Button>
-      </form>
+        <form onSubmit={handleSyncModeSubmit} className="lg:sticky lg:top-24 lg:self-start">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Share2 className="size-4 text-muted" aria-hidden="true" />
+                Distribution
+              </CardTitle>
+              <CardDescription>Controls which reseller storefronts can list this product.</CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-5">
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="syncMode">Sync mode</Label>
+                <Select id="syncMode" value={syncMode} onChange={(e) => setSyncMode(e.target.value)}>
+                  <option value="global">global</option>
+                  <option value="optional">optional</option>
+                  <option value="private">private</option>
+                  <option value="exclusive">exclusive</option>
+                </Select>
+                <p className="text-xs text-muted">
+                  {syncMode === 'global' && 'Enabled for every reseller and cannot be turned off.'}
+                  {syncMode === 'optional' && 'Offered to every reseller, who each choose to enable it.'}
+                  {syncMode === 'private' && 'Only the selected reseller can list it.'}
+                  {syncMode === 'exclusive' && 'Reserved for the selected reseller alone.'}
+                </p>
+              </div>
 
-      <section>
-        <h2>Versions</h2>
-        <ul>
-          {versions?.map((version) => (
-            <li key={version._id}>
-              <strong>{version.version}</strong> — {version.changelog}
-            </li>
-          ))}
-        </ul>
+              {(syncMode === 'private' || syncMode === 'exclusive') && (
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="tenantId">Tenant</Label>
+                  <Select id="tenantId" value={tenantId} onChange={(e) => setTenantId(e.target.value)}>
+                    <option value="">Select a tenant</option>
+                    {tenants?.map((tenant) => (
+                      <option key={tenant._id} value={tenant._id}>
+                        {tenant.name} ({tenant.subdomain})
+                      </option>
+                    ))}
+                  </Select>
+                </div>
+              )}
 
-        <form onSubmit={handleSubmitVersion(onSubmitVersion)}>
-          <label htmlFor="version">Version</label>
-          <input id="version" {...registerVersion('version')} />
-          {versionErrors.version && <p>{versionErrors.version.message}</p>}
-
-          <label htmlFor="changelog">Changelog</label>
-          <textarea id="changelog" {...registerVersion('changelog')} />
-
-          <label htmlFor="versionFile">File</label>
-          <input id="versionFile" type="file" onChange={(e) => setVersionFile(e.target.files?.[0])} />
-
-          <Button type="submit" disabled={isSubmittingVersion}>
-            Add version
-          </Button>
+              {syncModeError && <Alert>{syncModeError}</Alert>}
+            </CardContent>
+            <CardFooter className="justify-end">
+              <Button type="submit" variant="outline">
+                Update sync mode
+              </Button>
+            </CardFooter>
+          </Card>
         </form>
-      </section>
+      </div>
     </div>
   );
 }

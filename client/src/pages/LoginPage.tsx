@@ -1,10 +1,13 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { useAuth } from '../auth/AuthContext';
 import { Button } from '../components/ui/button';
+import { Input, Label, FieldError } from '../components/ui/input';
+import { Alert } from '../components/ui/alert';
+import { AuthLayout } from '../components/layout/AuthLayout';
 
 const loginSchema = z.object({
   email: z.string().email('Enter a valid email'),
@@ -45,24 +48,53 @@ export default function LoginPage(): JSX.Element {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)}>
-      <h1>Log in</h1>
-      <label htmlFor="email">Email</label>
-      <input id="email" type="email" {...register('email')} />
-      {errors.email && <p>{errors.email.message}</p>}
+    <AuthLayout
+      title="Log in"
+      subtitle="Pick up where you left off."
+      highlights={[
+        'A storefront that carries your brand',
+        'Your prices, your margin',
+        'License keys issued automatically',
+      ]}
+      footer={
+        <>
+          New here?{' '}
+          <Link to="/register" className="font-medium text-primary hover:underline">
+            Create an account
+          </Link>{' '}
+          or{' '}
+          <Link to="/register-reseller" className="font-medium text-primary hover:underline">
+            start reselling
+          </Link>
+          .
+        </>
+      }
+    >
+      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4" noValidate>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="email">Email</Label>
+          <Input id="email" type="email" autoComplete="email" {...register('email')} />
+          {errors.email && <FieldError>{errors.email.message}</FieldError>}
+        </div>
 
-      <label htmlFor="password">Password</label>
-      <input id="password" type="password" {...register('password')} />
-      {errors.password && <p>{errors.password.message}</p>}
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="password">Password</Label>
+          <Input id="password" type="password" autoComplete="current-password" {...register('password')} />
+          {errors.password && <FieldError>{errors.password.message}</FieldError>}
+        </div>
 
-      <label htmlFor="tenantSubdomain">Store subdomain (optional)</label>
-      <input id="tenantSubdomain" {...register('tenantSubdomain')} />
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="tenantSubdomain">Store subdomain (optional)</Label>
+          <Input id="tenantSubdomain" placeholder="acme" {...register('tenantSubdomain')} />
+          <p className="text-xs text-muted">Leave blank if you sign in as the platform owner.</p>
+        </div>
 
-      {serverError && <p role="alert">{serverError}</p>}
+        {serverError && <Alert>{serverError}</Alert>}
 
-      <Button type="submit" disabled={isSubmitting}>
-        Log in
-      </Button>
-    </form>
+        <Button type="submit" size="lg" disabled={isSubmitting} className="mt-1 w-full">
+          Log in
+        </Button>
+      </form>
+    </AuthLayout>
   );
 }

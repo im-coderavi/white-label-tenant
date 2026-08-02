@@ -1,30 +1,8 @@
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../auth/AuthContext';
-import { Button } from '../../components/ui/button';
+import { LayoutGrid } from 'lucide-react';
+import DashboardLayout, { type NavItem } from '../../components/layout/DashboardLayout';
+
+const NAV: NavItem[] = [{ to: '/reseller/catalog', label: 'Catalog', icon: LayoutGrid }];
 
 export default function ResellerLayout(): JSX.Element {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
-
-  const handleLogout = (): void => {
-    logout();
-    navigate('/login');
-  };
-
-  return (
-    <div>
-      <header>
-        <span>{user?.email}</span>
-        <Button variant="outline" onClick={handleLogout}>
-          Log out
-        </Button>
-      </header>
-      <nav>
-        <NavLink to="/reseller/catalog">Catalog</NavLink>
-      </nav>
-      <main>
-        <Outlet />
-      </main>
-    </div>
-  );
+  return <DashboardLayout sectionLabel="Reseller" nav={NAV} />;
 }

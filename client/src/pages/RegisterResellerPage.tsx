@@ -2,9 +2,14 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { Rocket } from 'lucide-react';
 import { api } from '../lib/api';
 import { Button } from '../components/ui/button';
+import { Input, Select, Label, FieldError } from '../components/ui/input';
+import { Alert } from '../components/ui/alert';
+import { AuthLayout } from '../components/layout/AuthLayout';
 
 interface Plan {
   _id: string;
@@ -26,6 +31,12 @@ const registerResellerSchema = z.object({
 });
 
 type RegisterResellerFormValues = z.infer<typeof registerResellerSchema>;
+
+const HIGHLIGHTS = [
+  'Your own branded storefront',
+  'Set custom prices or a flat discount',
+  'Keep every rupee above your cost',
+];
 
 export default function RegisterResellerPage(): JSX.Element {
   const [result, setResult] = useState<{ gatewayOrderId: string; amount: number; currency: string } | null>(
@@ -59,48 +70,86 @@ export default function RegisterResellerPage(): JSX.Element {
 
   if (result) {
     return (
-      <p>
-        Almost there — complete payment (order {result.gatewayOrderId}) for {result.amount} {result.currency} to
-        activate your store.
-      </p>
+      <AuthLayout title="Store reserved" subtitle="Payment is the last step." highlights={HIGHLIGHTS}>
+        <div className="rounded-lg border border-border bg-surface p-6 text-center shadow-card">
+          <span className="mx-auto mb-4 grid size-11 place-items-center rounded-md bg-primary/10 text-primary">
+            <Rocket className="size-5" aria-hidden="true" />
+          </span>
+          <p className="text-sm text-muted">
+            Almost there — complete payment (order {result.gatewayOrderId}) for {result.amount}{' '}
+            {result.currency} to activate your store.
+          </p>
+          <Button asChild className="mt-5 w-full">
+            <Link to="/login">Go to login</Link>
+          </Button>
+        </div>
+      </AuthLayout>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)}>
-      <h1>Become a reseller</h1>
-      <label htmlFor="businessName">Business name</label>
-      <input id="businessName" {...register('businessName')} />
-      {errors.businessName && <p>{errors.businessName.message}</p>}
+    <AuthLayout
+      title="Become a reseller"
+      subtitle="Pick a plan and your storefront goes live the moment payment clears."
+      highlights={HIGHLIGHTS}
+      footer={
+        <>
+          Already selling with us?{' '}
+          <Link to="/login" className="font-medium text-primary hover:underline">
+            Log in
+          </Link>
+          .
+        </>
+      }
+    >
+      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4" noValidate>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="businessName">Business name</Label>
+          <Input id="businessName" placeholder="Acme Digital" {...register('businessName')} />
+          {errors.businessName && <FieldError>{errors.businessName.message}</FieldError>}
+        </div>
 
-      <label htmlFor="subdomain">Store subdomain</label>
-      <input id="subdomain" {...register('subdomain')} />
-      {errors.subdomain && <p>{errors.subdomain.message}</p>}
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="subdomain">Store subdomain</Label>
+          <Input id="subdomain" placeholder="acme" {...register('subdomain')} />
+          {errors.subdomain ? (
+            <FieldError>{errors.subdomain.message}</FieldError>
+          ) : (
+            <p className="text-xs text-muted">Lowercase letters, numbers, and hyphens.</p>
+          )}
+        </div>
 
-      <label htmlFor="email">Email</label>
-      <input id="email" type="email" {...register('email')} />
-      {errors.email && <p>{errors.email.message}</p>}
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="email">Email</Label>
+          <Input id="email" type="email" autoComplete="email" {...register('email')} />
+          {errors.email && <FieldError>{errors.email.message}</FieldError>}
+        </div>
 
-      <label htmlFor="password">Password</label>
-      <input id="password" type="password" {...register('password')} />
-      {errors.password && <p>{errors.password.message}</p>}
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="password">Password</Label>
+          <Input id="password" type="password" autoComplete="new-password" {...register('password')} />
+          {errors.password && <FieldError>{errors.password.message}</FieldError>}
+        </div>
 
-      <label htmlFor="planId">Plan</label>
-      <select id="planId" {...register('planId')} disabled={plansLoading}>
-        <option value="">Select a plan</option>
-        {plans?.map((plan) => (
-          <option key={plan._id} value={plan._id}>
-            {plan.name} — {plan.price} {plan.currency}
-          </option>
-        ))}
-      </select>
-      {errors.planId && <p>{errors.planId.message}</p>}
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="planId">Plan</Label>
+          <Select id="planId" disabled={plansLoading} {...register('planId')}>
+            <option value="">Select a plan</option>
+            {plans?.map((plan) => (
+              <option key={plan._id} value={plan._id}>
+                {plan.name} — {plan.price} {plan.currency}
+              </option>
+            ))}
+          </Select>
+          {errors.planId && <FieldError>{errors.planId.message}</FieldError>}
+        </div>
 
-      {serverError && <p role="alert">{serverError}</p>}
+        {serverError && <Alert>{serverError}</Alert>}
 
-      <Button type="submit" disabled={isSubmitting}>
-        Register
-      </Button>
-    </form>
+        <Button type="submit" size="lg" disabled={isSubmitting} className="mt-1 w-full">
+          Register
+        </Button>
+      </form>
+    </AuthLayout>
   );
 }

@@ -62,7 +62,8 @@ describe('ProductDetailPage', () => {
   it('renders the product name and status', async () => {
     renderPage();
     expect(await screen.findByText('Super Tool')).toBeInTheDocument();
-    expect(screen.getByText('Status: draft')).toBeInTheDocument();
+    // Status renders as a badge alongside the title.
+    expect(screen.getByText('draft')).toBeInTheDocument();
   });
 
   it('saves info changes', async () => {

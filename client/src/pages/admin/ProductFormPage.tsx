@@ -1,10 +1,15 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
+import { ArrowLeft } from 'lucide-react';
 import { createProduct } from '../../api/adminProducts';
 import { Button } from '../../components/ui/button';
+import { Input, Textarea, Select, Label, FieldError } from '../../components/ui/input';
+import { Alert } from '../../components/ui/alert';
+import { PageHeader } from '../../components/ui/page-header';
+import { Card, CardContent, CardFooter } from '../../components/ui/card';
 
 const PRODUCT_TYPES = [
   'software',
@@ -51,37 +56,86 @@ export default function ProductFormPage(): JSX.Element {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)}>
-      <h1>New product</h1>
-      <label htmlFor="name">Name</label>
-      <input id="name" {...register('name')} />
-      {errors.name && <p>{errors.name.message}</p>}
+    <div className="flex flex-col gap-6">
+      <div>
+        <Link
+          to="/admin/products"
+          className="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-muted hover:text-foreground"
+        >
+          <ArrowLeft className="size-4" aria-hidden="true" />
+          Back to products
+        </Link>
+        <PageHeader
+          title="New product"
+          description="Products start as drafts. Add a version, then publish when it is ready to sell."
+        />
+      </div>
 
-      <label htmlFor="type">Type</label>
-      <select id="type" {...register('type')}>
-        {PRODUCT_TYPES.map((type) => (
-          <option key={type} value={type}>
-            {type}
-          </option>
-        ))}
-      </select>
-      {errors.type && <p>{errors.type.message}</p>}
+      <form onSubmit={handleSubmit(onSubmit)} noValidate>
+        <Card className="max-w-2xl">
+          <CardContent className="flex flex-col gap-5">
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="name">Name</Label>
+              <Input id="name" placeholder="Ecommerce starter kit" {...register('name')} />
+              {errors.name && <FieldError>{errors.name.message}</FieldError>}
+            </div>
 
-      <label htmlFor="description">Description</label>
-      <textarea id="description" {...register('description')} />
+            <div className="grid gap-5 sm:grid-cols-2">
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="type">Type</Label>
+                <Select id="type" {...register('type')}>
+                  {PRODUCT_TYPES.map((type) => (
+                    <option key={type} value={type}>
+                      {type.replace('_', ' ')}
+                    </option>
+                  ))}
+                </Select>
+                {errors.type && <FieldError>{errors.type.message}</FieldError>}
+              </div>
 
-      <label htmlFor="basePrice">Base price</label>
-      <input id="basePrice" type="number" {...register('basePrice')} />
-      {errors.basePrice && <p>{errors.basePrice.message}</p>}
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="basePrice">Base price</Label>
+                <Input id="basePrice" type="number" placeholder="0" {...register('basePrice')} />
+                {errors.basePrice ? (
+                  <FieldError>{errors.basePrice.message}</FieldError>
+                ) : (
+                  <p className="text-xs text-muted">Resellers can charge more or less than this.</p>
+                )}
+              </div>
+            </div>
 
-      <label htmlFor="thumbnail">Thumbnail</label>
-      <input id="thumbnail" type="file" onChange={(e) => setThumbnail(e.target.files?.[0])} />
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                placeholder="What the buyer gets, in a sentence or two."
+                {...register('description')}
+              />
+            </div>
 
-      {serverError && <p role="alert">{serverError}</p>}
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="thumbnail">Thumbnail</Label>
+              <Input
+                id="thumbnail"
+                type="file"
+                accept="image/*"
+                onChange={(e) => setThumbnail(e.target.files?.[0])}
+              />
+            </div>
 
-      <Button type="submit" disabled={isSubmitting}>
-        Create product
-      </Button>
-    </form>
+            {serverError && <Alert>{serverError}</Alert>}
+          </CardContent>
+
+          <CardFooter className="justify-end">
+            <Button asChild variant="ghost">
+              <Link to="/admin/products">Cancel</Link>
+            </Button>
+            <Button type="submit" disabled={isSubmitting}>
+              Create product
+            </Button>
+          </CardFooter>
+        </Card>
+      </form>
+    </div>
   );
 }

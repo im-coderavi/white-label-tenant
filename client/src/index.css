@@ -2,21 +2,87 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: 0 0% 100%;
-  --foreground: 222.2 84% 4.9%;
-  --primary: 222.2 47.4% 11.2%;
-  --primary-foreground: 210 40% 98%;
-  --secondary: 210 40% 96.1%;
-  --secondary-foreground: 222.2 47.4% 11.2%;
-  --destructive: 0 84.2% 60.2%;
-  --destructive-foreground: 210 40% 98%;
-  --border: 214.3 31.8% 91.4%;
-  --radius: 0.5rem;
+@layer base {
+  :root {
+    /* Surfaces */
+    --background: 220 43% 98%; /* mist  #F6F8FC */
+    --surface: 0 0% 100%; /* card   #FFFFFF */
+    --foreground: 222 47% 11%; /* ink    #0F172A */
+    --muted: 215 16% 47%; /* slate  #64748B */
+    --border: 220 31% 93%; /* line   #E6EAF2 */
+
+    /* Brand */
+    --primary: 243 75% 59%; /* indigo #4F46E5 */
+    --primary-foreground: 0 0% 100%;
+    --accent: 262 83% 58%; /* violet #7C3AED */
+    --accent-foreground: 0 0% 100%;
+
+    --secondary: 220 40% 96%;
+    --secondary-foreground: 222 47% 11%;
+
+    /* Status */
+    --success: 160 84% 39%; /* emerald #10B981 */
+    --warning: 38 92% 50%; /* amber   #F59E0B */
+    --destructive: 347 77% 50%; /* rose    #E11D48 */
+    --destructive-foreground: 0 0% 100%;
+
+    --ring: 243 75% 59%;
+    --radius: 0.875rem;
+  }
+
+  * {
+    border-color: hsl(var(--border));
+  }
+
+  body {
+    margin: 0;
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+    font-feature-settings: 'cv02', 'cv03', 'cv04';
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+    letter-spacing: -0.021em;
+    color: hsl(var(--foreground));
+  }
+
+  /* Native controls inherit the type system so unstyled fallbacks still look intentional. */
+  input,
+  select,
+  textarea,
+  button {
+    font-family: inherit;
+  }
+
+  ::selection {
+    background-color: hsl(var(--primary) / 0.16);
+  }
 }
 
-body {
-  margin: 0;
-  background-color: hsl(var(--background));
-  color: hsl(var(--foreground));
+@layer components {
+  /* Signature: license keys sit on a faint dot grid so a key always reads as an artifact, not a string. */
+  .key-grid {
+    background-color: hsl(var(--foreground) / 0.02);
+    background-image: radial-gradient(hsl(var(--foreground) / 0.13) 1px, transparent 1px);
+    background-size: 12px 12px;
+    background-position: -1px -1px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
