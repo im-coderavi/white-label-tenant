@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { ShoppingBag, Sparkles, Store } from 'lucide-react';
 import { listStorefrontProducts } from '../../api/storefront';
@@ -96,7 +96,11 @@ export default function StorefrontPage(): JSX.Element {
 
               <div className="flex flex-1 flex-col p-5">
                 <p className="text-eyebrow uppercase text-muted">{item.type.replace('_', ' ')}</p>
-                <h2 className="mt-1.5 font-display text-base font-semibold leading-snug">{item.name}</h2>
+                <h2 className="mt-1.5 font-display text-base font-semibold leading-snug">
+                  <Link to={`/account/products/${item._id}`} className="hover:text-primary">
+                    {item.name}
+                  </Link>
+                </h2>
                 {item.description && (
                   <p className="mt-2 line-clamp-2 text-sm text-muted">{item.description}</p>
                 )}

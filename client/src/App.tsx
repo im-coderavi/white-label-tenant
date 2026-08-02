@@ -18,6 +18,7 @@ import StorefrontPage from './pages/customer/StorefrontPage';
 import OrderConfirmationPage from './pages/customer/OrderConfirmationPage';
 import MyOrdersPage from './pages/customer/MyOrdersPage';
 import MyLicensesPage from './pages/customer/MyLicensesPage';
+import CustomerProductDetailPage from './pages/customer/ProductDetailPage';
 import { ProtectedRoute } from './auth/ProtectedRoute';
 
 export default function App(): JSX.Element {
@@ -63,6 +64,7 @@ export default function App(): JSX.Element {
       >
         <Route index element={<Navigate to="/account/store" replace />} />
         <Route path="store" element={<StorefrontPage />} />
+        <Route path="products/:productId" element={<CustomerProductDetailPage />} />
         <Route path="orders" element={<MyOrdersPage />} />
         <Route path="orders/:orderId" element={<OrderConfirmationPage />} />
         <Route path="licenses" element={<MyLicensesPage />} />
