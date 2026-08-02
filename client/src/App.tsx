@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
+import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import RegisterCustomerPage from './pages/RegisterCustomerPage';
 import RegisterResellerPage from './pages/RegisterResellerPage';
@@ -19,7 +20,7 @@ import { ProtectedRoute } from './auth/ProtectedRoute';
 export default function App(): JSX.Element {
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/login" replace />} />
+      <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterCustomerPage />} />
       <Route path="/register-reseller" element={<RegisterResellerPage />} />

@@ -31,9 +31,10 @@ describe('App', () => {
     localStorage.clear();
   });
 
-  it('redirects the root path to /login', async () => {
+  it('serves the marketing page at the root path', async () => {
+    vi.mocked(api.get).mockResolvedValueOnce({ data: { plans: [] } });
     renderApp('/');
-    expect(await screen.findByRole('heading', { name: 'Log in' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { level: 1 })).toHaveTextContent('Every sale ships a key');
   });
 
   it('logs in as master_admin and lands on the admin products page', async () => {
