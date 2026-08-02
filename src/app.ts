@@ -11,6 +11,8 @@ import { publicPlansRouter } from './modules/plans/public.routes';
 import { resellerSignupRouter } from './modules/resellerSignup/resellerSignup.routes';
 import { resellerCatalogRouter } from './modules/resellerCatalog/resellerCatalog.routes';
 import { storefrontRouter } from './modules/storefront/storefront.routes';
+import { resellerAccountRouter } from './modules/resellerAccount/resellerAccount.routes';
+import { adminStatsRouter } from './modules/adminStats/adminStats.routes';
 import { errorMiddleware } from './middleware/error.middleware';
 
 export function createApp(): Express {
@@ -39,6 +41,9 @@ export function createApp(): Express {
   app.use('/api/v1/auth', resellerSignupRouter);
   app.use('/api/v1/reseller/products', resellerCatalogRouter);
   app.use('/api/v1/customer/products', storefrontRouter);
+  // Mounted after the catalog router so /reseller/products keeps resolving there.
+  app.use('/api/v1/reseller', resellerAccountRouter);
+  app.use('/api/v1/admin/stats', adminStatsRouter);
 
   app.use(errorMiddleware);
   return app;

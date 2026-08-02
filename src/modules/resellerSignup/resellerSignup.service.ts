@@ -5,6 +5,7 @@ import { Subscription, SubscriptionDocument } from '../../models/Subscription';
 import { ConflictError, NotFoundError } from '../../common/errors';
 import { hashPassword } from '../../common/password';
 import { mockPaymentGateway } from '../../common/paymentGateway';
+import { generateSubscriptionKey } from '../../common/licenseKey';
 import { smtpEmailService } from '../../common/smtpEmail';
 
 export interface RegisterResellerResult {
@@ -88,6 +89,9 @@ export async function processResellerSignupWebhook(
   }
 
   subscription.status = 'active';
+  if (!subscription.licenseKey) {
+    subscription.licenseKey = generateSubscriptionKey();
+  }
   if (plan.billingCycle === 'lifetime') {
     subscription.currentPeriodEnd = null;
   } else {

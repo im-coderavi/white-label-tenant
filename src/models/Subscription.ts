@@ -8,6 +8,8 @@ export interface SubscriptionDocument extends Document {
   status: SubscriptionStatus;
   currentPeriodEnd: Date | null;
   paymentRef: string | null;
+  /** Issued when the subscription first activates; identifies the reseller's access. */
+  licenseKey: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -23,6 +25,7 @@ const subscriptionSchema = new Schema<SubscriptionDocument>(
     },
     currentPeriodEnd: { type: Date, default: null },
     paymentRef: { type: String, default: null },
+    licenseKey: { type: String, default: null },
   },
   { timestamps: true }
 );
