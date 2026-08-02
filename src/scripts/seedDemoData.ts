@@ -7,7 +7,7 @@ import { User } from '../models/User';
 import { ResellerProduct } from '../models/ResellerProduct';
 import { Subscription } from '../models/Subscription';
 import { syncProductToTenants } from '../modules/products/products.service';
-import { generateLicenseKey } from '../common/licenseKey';
+import { generateLicenseKey, generateSubscriptionKey } from '../common/licenseKey';
 import { hashPassword } from '../common/password';
 import { logger } from '../common/logger';
 
@@ -276,6 +276,7 @@ async function seedStore(password: string): Promise<TenantDocument> {
         planId: plan._id,
         status: 'active',
         currentPeriodEnd: periodEnd,
+        licenseKey: generateSubscriptionKey(),
       });
     }
   }
