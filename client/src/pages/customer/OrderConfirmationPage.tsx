@@ -140,9 +140,14 @@ export default function OrderConfirmationPage(): JSX.Element {
 
         <CardFooter className="justify-end">
           {isPaid ? (
-            <Button asChild variant="outline">
-              <Link to="/account/store">Back to store</Link>
-            </Button>
+            <>
+              <Button asChild variant="ghost">
+                <Link to="/account/store">Back to store</Link>
+              </Button>
+              <Button asChild variant="outline">
+                <Link to="/account/licenses">View my licenses</Link>
+              </Button>
+            </>
           ) : (
             <Button onClick={handleConfirm} disabled={isConfirming}>
               Simulate Payment

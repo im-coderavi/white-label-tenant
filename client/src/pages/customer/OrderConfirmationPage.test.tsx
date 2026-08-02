@@ -64,20 +64,22 @@ describe('OrderConfirmationPage', () => {
       {
         _id: 'lic-other',
         key: 'TZP-2026-OTHER123',
-        productId: 'p9',
+        product: { _id: 'p9', name: 'Another Product', type: 'plugin' },
         orderId: 'order-9',
         status: 'assigned',
         activationLimit: 1,
         activationsUsed: 0,
+        expiresAt: null,
       },
       {
         _id: 'lic-1',
         key: 'TZP-2026-ABCD1234',
-        productId: 'p1',
+        product: { _id: 'p1', name: 'Super Tool', type: 'software' },
         orderId: 'order-1',
         status: 'assigned',
         activationLimit: 3,
         activationsUsed: 1,
+        expiresAt: null,
       },
     ]);
     renderPage({ orderId: 'order-1', gatewayOrderId: 'mock_order_1', amount: 180, currency: 'INR' });

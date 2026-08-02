@@ -60,4 +60,38 @@ describe('checkout module — list orders', () => {
     expect(res.status).toBe(200);
     expect(res.body.orders).toHaveLength(1);
   });
+
+  it('includes the product each order is for', async () => {
+    const tenant = await Tenant.create({ name: 'Acme', subdomain: 'acme-orders-product' });
+    const product = await Product.create({
+      name: 'SaaS Boilerplate',
+      slug: 'saas-boilerplate',
+      type: 'digital_download',
+      basePrice: 5999,
+    });
+    const userId = new Types.ObjectId();
+    await Order.create({
+      tenantId: tenant._id,
+      customerUserId: userId,
+      productId: product._id,
+      orderType: 'single_product',
+      amount: 5999,
+      status: 'paid',
+    });
+
+    const token = signAccessToken({
+      sub: userId.toString(),
+      role: 'customer',
+      tenantId: tenant._id.toString(),
+    });
+    const res = await request(app).get('/api/v1/customer/orders').set('Authorization', `Bearer ${token}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.orders[0].product).toEqual({
+      _id: product._id.toString(),
+      name: 'SaaS Boilerplate',
+      type: 'digital_download',
+    });
+    expect(res.body.orders[0].status).toBe('paid');
+  });
 });

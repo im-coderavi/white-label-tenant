@@ -58,6 +58,34 @@ describe('licenses module — customer list & activate', () => {
     expect(res.body.licenses[0].key).toBe('TZP-2026-MINE0001');
   });
 
+  it('includes the product each license belongs to', async () => {
+    const product = await Product.create({
+      name: 'Nova Portfolio Theme',
+      slug: 'nova-portfolio-theme',
+      type: 'theme',
+      basePrice: 999,
+    });
+    const userId = new mongoose.Types.ObjectId();
+    await License.create({
+      productId: product._id,
+      key: 'TZP-2026-WITHPROD',
+      assignedUserId: userId,
+      status: 'assigned',
+    });
+
+    const token = signAccessToken({ sub: userId.toString(), role: 'customer', tenantId: 'tenant-x' });
+    const res = await request(app)
+      .get('/api/v1/customer/licenses')
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.licenses[0].product).toEqual({
+      _id: product._id.toString(),
+      name: 'Nova Portfolio Theme',
+      type: 'theme',
+    });
+  });
+
   it('401s activating a license not assigned to the caller', async () => {
     const product = await Product.create({ name: 'P', slug: 'p', type: 'software', basePrice: 10 });
     const ownerId = new mongoose.Types.ObjectId();

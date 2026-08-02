@@ -1,5 +1,5 @@
 import { Order, OrderDocument } from '../../models/Order';
-import { Product } from '../../models/Product';
+import { Product, ProductDocument } from '../../models/Product';
 import { ResellerProduct } from '../../models/ResellerProduct';
 import { License } from '../../models/License';
 import { User } from '../../models/User';
@@ -133,8 +133,39 @@ export async function confirmPayment(orderId: string, userId: string): Promise<O
   return markOrderPaid(order);
 }
 
-export async function listOrdersForUser(userId: string): Promise<OrderDocument[]> {
-  return Order.find({ customerUserId: userId }).sort({ createdAt: -1 });
+export interface CustomerOrderView {
+  _id: string;
+  orderType: string;
+  amount: number;
+  currency: string;
+  status: string;
+  licenseId: string | null;
+  createdAt: Date;
+  product: { _id: string; name: string; type: string } | null;
+}
+
+/** The customer view carries the product, so order history reads without extra lookups. */
+export async function listOrdersForUser(userId: string): Promise<CustomerOrderView[]> {
+  const orders = await Order.find({ customerUserId: userId })
+    .sort({ createdAt: -1 })
+    .populate<{ productId: ProductDocument }>('productId');
+
+  return orders.map((order) => ({
+    _id: order._id.toString(),
+    orderType: order.orderType,
+    amount: order.amount,
+    currency: order.currency,
+    status: order.status,
+    licenseId: order.licenseId ? order.licenseId.toString() : null,
+    createdAt: order.createdAt,
+    product: order.productId
+      ? {
+          _id: order.productId._id.toString(),
+          name: order.productId.name,
+          type: order.productId.type,
+        }
+      : null,
+  }));
 }
 
 const DOWNLOAD_TOKEN_TTL_MINUTES = 15;

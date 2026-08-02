@@ -1,4 +1,5 @@
 import { License, LicenseDocument } from '../../models/License';
+import { ProductDocument } from '../../models/Product';
 import { generateLicenseKey } from '../../common/licenseKey';
 import { ConflictError, NotFoundError, UnauthorizedError } from '../../common/errors';
 import { User } from '../../models/User';
@@ -108,8 +109,39 @@ export async function assignLicense(licenseId: string, userId: string): Promise<
   return license;
 }
 
-export async function listLicensesForUser(userId: string): Promise<LicenseDocument[]> {
-  return License.find({ assignedUserId: userId }).sort({ createdAt: -1 });
+export interface CustomerLicenseView {
+  _id: string;
+  key: string;
+  status: string;
+  activationLimit: number;
+  activationsUsed: number;
+  expiresAt: Date | null;
+  orderId: string | null;
+  product: { _id: string; name: string; type: string } | null;
+}
+
+/** The customer view carries the product, so the UI never has to resolve ids itself. */
+export async function listLicensesForUser(userId: string): Promise<CustomerLicenseView[]> {
+  const licenses = await License.find({ assignedUserId: userId })
+    .sort({ createdAt: -1 })
+    .populate<{ productId: ProductDocument }>('productId');
+
+  return licenses.map((license) => ({
+    _id: license._id.toString(),
+    key: license.key,
+    status: license.status,
+    activationLimit: license.activationLimit,
+    activationsUsed: license.activationsUsed,
+    expiresAt: license.expiresAt,
+    orderId: license.orderId ? license.orderId.toString() : null,
+    product: license.productId
+      ? {
+          _id: license.productId._id.toString(),
+          name: license.productId.name,
+          type: license.productId.type,
+        }
+      : null,
+  }));
 }
 
 export async function activateLicense(id: string, userId: string): Promise<LicenseDocument> {
