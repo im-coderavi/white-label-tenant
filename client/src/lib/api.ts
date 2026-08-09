@@ -53,3 +53,23 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+export async function apiGet<T>(url: string): Promise<T> {
+  const res = await api.get<T>(url);
+  return res.data;
+}
+
+export async function apiPost<T>(url: string, data?: any): Promise<T> {
+  const res = await api.post<T>(url, data);
+  return res.data;
+}
+
+export async function apiPatch<T>(url: string, data?: any): Promise<T> {
+  const res = await api.patch<T>(url, data);
+  return res.data;
+}
+
+export async function apiDelete<T>(url: string): Promise<T> {
+  const res = await api.delete<T>(url);
+  return res.data;
+}

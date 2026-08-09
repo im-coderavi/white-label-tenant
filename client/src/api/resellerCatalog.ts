@@ -1,5 +1,12 @@
 import { api } from '../lib/api';
 
+export interface ResellerProductOverrides {
+  displayName?: string;
+  shortDescription?: string;
+  description?: string;
+  thumbnailUrl?: string;
+}
+
 export interface ResellerCatalogItem {
   _id: string;
   product: { _id: string; name: string; type: string; basePrice: number; currency: string };
@@ -8,6 +15,8 @@ export interface ResellerCatalogItem {
   customPrice: number | null;
   discountPercent: number | null;
   isFeatured: boolean;
+  sortOrder: number;
+  overrides: ResellerProductOverrides;
 }
 
 export interface UpdateCatalogItemInput {
@@ -16,6 +25,8 @@ export interface UpdateCatalogItemInput {
   customPrice?: number;
   discountPercent?: number;
   isFeatured?: boolean;
+  sortOrder?: number;
+  overrides?: ResellerProductOverrides;
 }
 
 export async function listCatalog(): Promise<ResellerCatalogItem[]> {

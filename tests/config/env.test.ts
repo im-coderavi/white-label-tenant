@@ -16,7 +16,8 @@ describe('env validation', () => {
     expect(() => require('../../src/config/env')).not.toThrow();
   });
 
-  it('throws when CLOUDINARY_URL is missing', () => {
+  it('throws when CLOUDINARY_URL is missing and STORAGE_DRIVER is cloudinary', () => {
+    process.env.STORAGE_DRIVER = 'cloudinary';
     delete process.env.CLOUDINARY_URL;
     expect(() => require('../../src/config/env')).toThrow();
   });

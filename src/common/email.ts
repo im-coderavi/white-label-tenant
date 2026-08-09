@@ -1,5 +1,5 @@
 export interface EmailService {
-  sendEmail(to: string, template: string, data: Record<string, unknown>): Promise<void>;
+  sendEmail(to: string, template: string, data: Record<string, unknown>, tenantId?: string | null): Promise<void>;
 }
 
 export const consoleEmailService: EmailService = {

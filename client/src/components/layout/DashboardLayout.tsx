@@ -1,22 +1,84 @@
 import { useState } from 'react';
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { LogOut, Menu, X, type LucideIcon } from 'lucide-react';
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { ChevronDown, LogOut, Menu, X, type LucideIcon } from 'lucide-react';
 import { useAuth } from '../../auth/AuthContext';
 import { Button } from '../ui/button';
 import { cn } from '../../lib/utils';
 import { Brand } from './Brand';
 
-export interface NavItem {
+interface NavLeafItem {
   to: string;
   label: string;
   icon: LucideIcon;
   /** Marks the index route so it only highlights on an exact match. */
   end?: boolean;
+  children?: undefined;
+  /** Badge text shown next to the label, e.g. a plan-gated feature's tier requirement. */
+  badge?: string;
 }
+
+interface NavGroupItem {
+  to?: undefined;
+  label: string;
+  icon: LucideIcon;
+  end?: undefined;
+  /** Nested links shown under this item as a collapsible group. */
+  children: Array<{ to: string; label: string; end?: boolean }>;
+  badge?: string;
+}
+
+export type NavItem = NavLeafItem | NavGroupItem;
 
 interface DashboardLayoutProps {
   sectionLabel: string;
   nav: NavItem[];
+}
+
+function NavGroup({ item, onNavigate }: { item: NavItem; onNavigate: () => void }): JSX.Element {
+  const location = useLocation();
+  const hasActiveChild = item.children?.some((child) => location.pathname.startsWith(child.to)) ?? false;
+  const [open, setOpen] = useState(hasActiveChild);
+
+  return (
+    <div>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className={cn(
+          'flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors',
+          hasActiveChild ? 'text-primary' : 'text-muted hover:bg-secondary hover:text-foreground'
+        )}
+        aria-expanded={open}
+      >
+        <item.icon className="size-[18px] shrink-0" aria-hidden="true" />
+        <span className="flex-1 text-left">{item.label}</span>
+        <ChevronDown
+          className={cn('size-4 shrink-0 transition-transform', open && 'rotate-180')}
+          aria-hidden="true"
+        />
+      </button>
+      {open && (
+        <div className="ml-[1.6rem] mt-0.5 flex flex-col gap-0.5 border-l border-border pl-3">
+          {item.children!.map((child) => (
+            <NavLink
+              key={child.to}
+              to={child.to}
+              end={child.end}
+              onClick={onNavigate}
+              className={({ isActive }) =>
+                cn(
+                  'rounded-md px-2.5 py-1.5 text-sm transition-colors',
+                  isActive ? 'bg-primary/10 font-medium text-primary' : 'text-muted hover:bg-secondary hover:text-foreground'
+                )
+              }
+            >
+              {child.label}
+            </NavLink>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
 /** Shared sidebar shell for the operator-facing areas (master admin, reseller). */
@@ -30,23 +92,32 @@ export default function DashboardLayout({ sectionLabel, nav }: DashboardLayoutPr
     navigate('/login');
   };
 
-  const navLinks = nav.map((item) => (
-    <NavLink
-      key={item.to}
-      to={item.to}
-      end={item.end}
-      onClick={() => setMenuOpen(false)}
-      className={({ isActive }) =>
-        cn(
-          'flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors',
-          isActive ? 'bg-primary/10 text-primary' : 'text-muted hover:bg-secondary hover:text-foreground'
-        )
-      }
-    >
-      <item.icon className="size-[18px] shrink-0" aria-hidden="true" />
-      {item.label}
-    </NavLink>
-  ));
+  const navLinks = nav.map((item) =>
+    item.children ? (
+      <NavGroup key={item.label} item={item} onNavigate={() => setMenuOpen(false)} />
+    ) : (
+      <NavLink
+        key={item.to}
+        to={item.to}
+        end={item.end}
+        onClick={() => setMenuOpen(false)}
+        className={({ isActive }) =>
+          cn(
+            'flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors',
+            isActive ? 'bg-primary/10 text-primary' : 'text-muted hover:bg-secondary hover:text-foreground'
+          )
+        }
+      >
+        <item.icon className="size-[18px] shrink-0" aria-hidden="true" />
+        <span className="flex-1">{item.label}</span>
+        {item.badge && (
+          <span className="rounded-full bg-accent/15 px-1.5 py-0.5 text-[0.625rem] font-semibold uppercase text-accent">
+            {item.badge}
+          </span>
+        )}
+      </NavLink>
+    )
+  );
 
   return (
     <div className="min-h-screen lg:grid lg:grid-cols-[16rem_minmax(0,1fr)]">

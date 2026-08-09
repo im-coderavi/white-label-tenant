@@ -34,7 +34,7 @@ describe('LoginPage', () => {
       logout: vi.fn(),
     });
     renderLoginPage();
-    await userEvent.click(screen.getByRole('button', { name: 'Log in' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Sign In' }));
     expect(await screen.findByText('Enter a valid email')).toBeInTheDocument();
   });
 
@@ -50,9 +50,9 @@ describe('LoginPage', () => {
     });
     renderLoginPage();
 
-    await userEvent.type(screen.getByLabelText('Email'), 'a@example.com');
+    await userEvent.type(screen.getByLabelText('Email Address'), 'a@example.com');
     await userEvent.type(screen.getByLabelText('Password'), 'longenough1');
-    await userEvent.click(screen.getByRole('button', { name: 'Log in' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Sign In' }));
 
     expect(await screen.findByText('Admin Home')).toBeInTheDocument();
     expect(login).toHaveBeenCalledWith({
@@ -74,10 +74,10 @@ describe('LoginPage', () => {
     });
     renderLoginPage();
 
-    await userEvent.type(screen.getByLabelText('Email'), 'r@example.com');
+    await userEvent.type(screen.getByLabelText('Email Address'), 'r@example.com');
     await userEvent.type(screen.getByLabelText('Password'), 'longenough1');
-    await userEvent.type(screen.getByLabelText('Store subdomain (optional)'), 'acme');
-    await userEvent.click(screen.getByRole('button', { name: 'Log in' }));
+    await userEvent.type(screen.getByLabelText('Store Subdomain / Slug (Optional)'), 'acme');
+    await userEvent.click(screen.getByRole('button', { name: 'Sign In' }));
 
     expect(login).toHaveBeenCalledWith({
       email: 'r@example.com',

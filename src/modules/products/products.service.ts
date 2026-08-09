@@ -32,6 +32,7 @@ export interface ListProductsQuery {
   type?: string;
   status?: string;
   search?: string;
+  categoryId?: string;
 }
 
 export interface ListProductsResult {
@@ -46,6 +47,7 @@ export async function listProducts(query: ListProductsQuery): Promise<ListProduc
   if (query.type) filter.type = query.type;
   if (query.status) filter.status = query.status;
   if (query.search) filter.name = { $regex: query.search, $options: 'i' };
+  if (query.categoryId) filter.categoryId = query.categoryId;
 
   const [items, total] = await Promise.all([
     Product.find(filter)
@@ -59,7 +61,14 @@ export async function listProducts(query: ListProductsQuery): Promise<ListProduc
 }
 
 export async function createProduct(
-  input: { name: string; type: string; description?: string; basePrice: number; currency?: string },
+  input: {
+    name: string;
+    type: string;
+    description?: string;
+    basePrice: number;
+    currency?: string;
+    categoryId?: string;
+  },
   thumbnailFile?: Express.Multer.File
 ): Promise<ProductDocument> {
   const slug = await generateUniqueSlug(input.name);
@@ -79,6 +88,7 @@ export async function createProduct(
     currency: input.currency ?? 'INR',
     thumbnailUrl,
     thumbnailPublicId,
+    categoryId: input.categoryId ?? null,
   });
 }
 
@@ -90,7 +100,13 @@ export async function getProductById(id: string): Promise<ProductDocument> {
 
 export async function updateProduct(
   id: string,
-  input: { name?: string; description?: string; basePrice?: number; currency?: string },
+  input: {
+    name?: string;
+    description?: string;
+    basePrice?: number;
+    currency?: string;
+    categoryId?: string | null;
+  },
   thumbnailFile?: Express.Multer.File
 ): Promise<ProductDocument> {
   const product = await getProductById(id);
@@ -98,6 +114,9 @@ export async function updateProduct(
   if (input.description !== undefined) product.description = input.description;
   if (input.basePrice !== undefined) product.basePrice = input.basePrice;
   if (input.currency !== undefined) product.currency = input.currency;
+  if (input.categoryId !== undefined) {
+    product.categoryId = input.categoryId ? new Types.ObjectId(input.categoryId) : null;
+  }
   if (thumbnailFile) {
     const uploaded = await uploadBuffer(thumbnailFile.buffer, 'toolzypro/product-thumbnails');
     product.thumbnailUrl = uploaded.secureUrl;

@@ -9,6 +9,8 @@ import { api } from './lib/api';
 
 vi.mock('./lib/api', () => ({
   api: { get: vi.fn(), post: vi.fn() },
+  apiGet: vi.fn().mockResolvedValue({ store: null }),
+  apiPost: vi.fn(),
 }));
 
 function renderApp(initialPath: string): void {
@@ -63,9 +65,9 @@ describe('App', () => {
 
     renderApp('/login');
 
-    await userEvent.type(screen.getByLabelText('Email'), 'admin@example.com');
+    await userEvent.type(screen.getByLabelText('Email Address'), 'admin@example.com');
     await userEvent.type(screen.getByLabelText('Password'), 'longenough1');
-    await userEvent.click(screen.getByRole('button', { name: 'Log in' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Sign In' }));
 
     expect(await screen.findByRole('heading', { name: 'Overview' })).toBeInTheDocument();
   });
@@ -94,9 +96,9 @@ describe('App', () => {
 
     renderApp('/login');
 
-    await userEvent.type(screen.getByLabelText('Email'), 'reseller@example.com');
+    await userEvent.type(screen.getByLabelText('Email Address'), 'reseller@example.com');
     await userEvent.type(screen.getByLabelText('Password'), 'longenough1');
-    await userEvent.click(screen.getByRole('button', { name: 'Log in' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Sign In' }));
 
     expect(await screen.findByRole('heading', { name: 'Dashboard' })).toBeInTheDocument();
   });
@@ -113,15 +115,17 @@ describe('App', () => {
 
     renderApp('/login');
 
-    await userEvent.type(screen.getByLabelText('Email'), 'customer@example.com');
+    await userEvent.type(screen.getByLabelText('Email Address'), 'customer@example.com');
     await userEvent.type(screen.getByLabelText('Password'), 'longenough1');
-    await userEvent.click(screen.getByRole('button', { name: 'Log in' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Sign In' }));
 
-    expect(await screen.findByRole('heading', { name: 'Store' })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { name: 'Premium Digital Software & Tools Marketplace' })
+    ).toBeInTheDocument();
   });
 
   it('redirects an unauthenticated visit to /admin back to /login', async () => {
     renderApp('/admin');
-    expect(await screen.findByRole('heading', { name: 'Log in' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Welcome Back to ToolzyPro' })).toBeInTheDocument();
   });
 });

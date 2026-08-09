@@ -44,7 +44,7 @@ export async function register(input: {
     expiresAt: new Date(Date.now() + VERIFY_TTL_MS),
     used: false,
   });
-  await smtpEmailService.sendEmail(user.email, 'verify-email', { token: rawVerify });
+  await smtpEmailService.sendEmail(user.email, 'verify-email', { token: rawVerify }, tenant._id.toString());
   return { user };
 }
 
@@ -74,15 +74,24 @@ export async function login(input: {
   password: string;
   tenantSubdomain?: string;
 }): Promise<{ user: UserDocument; tokens: TokenPair }> {
-  const query: Record<string, unknown> = { email: input.email.toLowerCase() };
-  if (input.tenantSubdomain) {
-    const tenant = await Tenant.findOne({ subdomain: input.tenantSubdomain.toLowerCase() });
-    if (!tenant) throw new UnauthorizedError('Invalid credentials');
-    query.tenantId = tenant._id;
-  } else {
-    query.tenantId = null;
+  const email = input.email.toLowerCase();
+
+  // 1. Check if user is Master Admin (tenantId === null, role === 'master_admin')
+  let user = await User.findOne({ email, role: 'master_admin', tenantId: null });
+
+  // 2. If not Master Admin, proceed with tenant-scoped or default lookup
+  if (!user) {
+    const query: Record<string, unknown> = { email };
+    if (input.tenantSubdomain) {
+      const tenant = await Tenant.findOne({ subdomain: input.tenantSubdomain.toLowerCase() });
+      if (!tenant) throw new UnauthorizedError('Invalid credentials');
+      query.tenantId = tenant._id;
+    } else {
+      query.tenantId = null;
+    }
+    user = await User.findOne(query);
   }
-  const user = await User.findOne(query);
+
   if (!user) throw new UnauthorizedError('Invalid credentials');
   if (user.status === 'suspended') throw new UnauthorizedError('Account suspended');
   const valid = await comparePassword(input.password, user.passwordHash);
@@ -123,7 +132,7 @@ export async function forgotPassword(input: { email: string; tenantSubdomain: st
     expiresAt: new Date(Date.now() + RESET_TTL_MS),
     used: false,
   });
-  await smtpEmailService.sendEmail(user.email, 'reset-password', { token: rawToken });
+  await smtpEmailService.sendEmail(user.email, 'reset-password', { token: rawToken }, tenant._id.toString());
 }
 
 export async function resetPassword(input: { token: string; newPassword: string }): Promise<void> {

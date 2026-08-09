@@ -24,9 +24,7 @@ export async function seedMasterAdmin(): Promise<void> {
   logger.info('Master admin created');
 }
 
-/* istanbul ignore next -- exercised manually via `npm run seed:master-admin`, not under test */
 if (require.main === module) {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
   const { connectDb, disconnectDb } = require('../config/db');
   connectDb()
     .then(() => seedMasterAdmin())

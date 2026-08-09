@@ -6,7 +6,7 @@ import { User } from '../../models/User';
 import { ProductVersion } from '../../models/ProductVersion';
 import { DownloadToken } from '../../models/DownloadToken';
 import { ConflictError, ForbiddenError, NotFoundError } from '../../common/errors';
-import { mockPaymentGateway } from '../../common/paymentGateway';
+import { getGatewayForTenant } from '../../common/paymentGateway';
 import { smtpEmailService } from '../../common/smtpEmail';
 import { logger } from '../../common/logger';
 
@@ -50,6 +50,8 @@ export async function createCheckout(input: {
   const orderType = product.type === 'subscription' ? 'subscription' : 'single_product';
   const amount = computeEffectivePrice(product.basePrice, entitlement);
 
+  const gateway = await getGatewayForTenant(input.tenantId);
+
   const order = await Order.create({
     tenantId: input.tenantId,
     customerUserId: input.customerUserId,
@@ -58,10 +60,10 @@ export async function createCheckout(input: {
     amount,
     currency: product.currency,
     status: 'pending',
-    paymentGateway: 'mock',
+    paymentGateway: gateway.provider,
   });
 
-  const { gatewayOrderId } = await mockPaymentGateway.createOrder({
+  const { gatewayOrderId } = await gateway.createOrder({
     amount,
     currency: product.currency,
     receipt: order._id.toString(),
@@ -95,7 +97,12 @@ async function markOrderPaid(order: OrderDocument): Promise<OrderDocument> {
   const customer = await User.findById(order.customerUserId);
   if (customer) {
     try {
-      await smtpEmailService.sendEmail(customer.email, 'order-paid', { orderId: order._id.toString() });
+      await smtpEmailService.sendEmail(
+        customer.email,
+        'order-paid',
+        { orderId: order._id.toString() },
+        order.tenantId.toString()
+      );
     } catch (err) {
       logger.error('Failed to send order-paid notification email', {
         orderId: order._id.toString(),

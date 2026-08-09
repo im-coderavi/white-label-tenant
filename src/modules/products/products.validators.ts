@@ -20,6 +20,7 @@ export const createProductSchema = z.object({
   description: z.string().optional().default(''),
   basePrice: z.coerce.number().min(0),
   currency: z.string().optional(),
+  categoryId: z.string().min(1).optional(),
 });
 
 export const updateProductSchema = z.object({
@@ -27,6 +28,7 @@ export const updateProductSchema = z.object({
   description: z.string().optional(),
   basePrice: z.coerce.number().min(0).optional(),
   currency: z.string().optional(),
+  categoryId: z.string().min(1).nullable().optional(),
 });
 
 export const addVersionSchema = z.object({
@@ -50,4 +52,5 @@ export const listProductsQuerySchema = z.object({
   type: z.enum(PRODUCT_TYPES).optional(),
   status: z.enum(['draft', 'published', 'archived']).optional(),
   search: z.string().optional(),
+  categoryId: z.string().optional(),
 });

@@ -28,6 +28,8 @@ const globalItem: ResellerCatalogItem = {
   customPrice: null,
   discountPercent: null,
   isFeatured: false,
+  sortOrder: 0,
+  overrides: {},
 };
 
 const optionalItem: ResellerCatalogItem = {
@@ -38,6 +40,8 @@ const optionalItem: ResellerCatalogItem = {
   customPrice: null,
   discountPercent: null,
   isFeatured: false,
+  sortOrder: 0,
+  overrides: {},
 };
 
 describe('CatalogPage', () => {
