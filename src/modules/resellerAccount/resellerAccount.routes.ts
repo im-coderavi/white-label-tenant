@@ -1,7 +1,12 @@
 import { Router } from 'express';
 import { requireAuth } from '../../middleware/auth.middleware';
 import { requireRole } from '../../middleware/rbac.middleware';
-import { getSubscriptionHandler, getStatsHandler, listOrdersHandler } from './resellerAccount.controller';
+import {
+  getSubscriptionHandler,
+  getStatsHandler,
+  listOrdersHandler,
+  getEntitlementsHandler,
+} from './resellerAccount.controller';
 
 export const resellerAccountRouter = Router();
 
@@ -10,3 +15,4 @@ resellerAccountRouter.use(requireAuth, requireRole('reseller_admin', 'reseller_s
 resellerAccountRouter.get('/subscription', getSubscriptionHandler);
 resellerAccountRouter.get('/stats', getStatsHandler);
 resellerAccountRouter.get('/orders', listOrdersHandler);
+resellerAccountRouter.get('/entitlements', getEntitlementsHandler);

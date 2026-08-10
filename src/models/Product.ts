@@ -30,6 +30,8 @@ export interface ProductDocument extends Document {
   thumbnailPublicId: string | null;
   syncMode: ProductSyncMode;
   tenantId: Types.ObjectId | null;
+  /** Master-catalog category (a Category with tenantId: null) — drives marketplace browsing/filtering. */
+  categoryId: Types.ObjectId | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -63,6 +65,7 @@ const productSchema = new Schema<ProductDocument>(
     thumbnailPublicId: { type: String, default: null },
     syncMode: { type: String, enum: ['global', 'optional', 'private', 'exclusive'], default: 'optional' },
     tenantId: { type: Schema.Types.ObjectId, ref: 'Tenant', default: null },
+    categoryId: { type: Schema.Types.ObjectId, ref: 'Category', default: null },
   },
   { timestamps: true }
 );

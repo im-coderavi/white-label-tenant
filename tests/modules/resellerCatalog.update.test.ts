@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import express from 'express';
 import request from 'supertest';
 import { startTestDb, stopTestDb, clearTestDb } from '../helpers/db';
+import { grantAgencyPlan } from '../helpers/plans';
 import { resellerCatalogRouter } from '../../src/modules/resellerCatalog/resellerCatalog.routes';
 import { errorMiddleware } from '../../src/middleware/error.middleware';
 import { signAccessToken } from '../../src/common/jwt';
@@ -35,6 +36,7 @@ describe('resellerCatalog module — update', () => {
 
   it('404s for a catalog row belonging to another tenant', async () => {
     const tenant = await Tenant.create({ name: 'Acme', subdomain: 'acme-update-1' });
+    await grantAgencyPlan(tenant._id);
     const otherTenant = await Tenant.create({ name: 'Other', subdomain: 'other-update-1' });
     const product = await Product.create({
       name: 'Tool',
@@ -60,6 +62,7 @@ describe('resellerCatalog module — update', () => {
 
   it('rejects disabling a global product', async () => {
     const tenant = await Tenant.create({ name: 'Acme', subdomain: 'acme-update-2' });
+    await grantAgencyPlan(tenant._id);
     const product = await Product.create({
       name: 'Global Tool',
       slug: 'global-tool-update-2',
@@ -84,6 +87,7 @@ describe('resellerCatalog module — update', () => {
 
   it('enables an optional product', async () => {
     const tenant = await Tenant.create({ name: 'Acme', subdomain: 'acme-update-3' });
+    await grantAgencyPlan(tenant._id);
     const product = await Product.create({
       name: 'Optional Tool',
       slug: 'optional-tool-update-3',
@@ -109,6 +113,7 @@ describe('resellerCatalog module — update', () => {
 
   it('sets a custom price and nulls any existing discount', async () => {
     const tenant = await Tenant.create({ name: 'Acme', subdomain: 'acme-update-4' });
+    await grantAgencyPlan(tenant._id);
     const product = await Product.create({
       name: 'Priced Tool',
       slug: 'priced-tool-update-4',
@@ -140,6 +145,7 @@ describe('resellerCatalog module — update', () => {
 
   it('rejects pricingMode custom without a customPrice', async () => {
     const tenant = await Tenant.create({ name: 'Acme', subdomain: 'acme-update-5' });
+    await grantAgencyPlan(tenant._id);
     const product = await Product.create({
       name: 'Tool',
       slug: 'tool-update-5',
@@ -164,6 +170,7 @@ describe('resellerCatalog module — update', () => {
 
   it('toggles isFeatured independently of pricing', async () => {
     const tenant = await Tenant.create({ name: 'Acme', subdomain: 'acme-update-6' });
+    await grantAgencyPlan(tenant._id);
     const product = await Product.create({
       name: 'Tool',
       slug: 'tool-update-6',

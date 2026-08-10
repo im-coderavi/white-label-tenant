@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import * as resellerAccountService from './resellerAccount.service';
+import { getResellerEntitlements } from '../../common/planEntitlements';
 
 export async function getSubscriptionHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
@@ -23,6 +24,15 @@ export async function listOrdersHandler(req: Request, res: Response, next: NextF
   try {
     const orders = await resellerAccountService.listOrdersForTenant(req.tenantId as string);
     res.status(200).json({ orders });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function getEntitlementsHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const entitlements = await getResellerEntitlements(req.tenantId as string);
+    res.status(200).json({ entitlements });
   } catch (err) {
     next(err);
   }

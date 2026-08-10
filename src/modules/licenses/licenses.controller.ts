@@ -57,6 +57,19 @@ export async function listMyLicensesHandler(req: Request, res: Response, next: N
   }
 }
 
+/** Reseller's own view of licenses bound to their tenant — always scoped by the auth token, never client input. */
+export async function listResellerLicensesHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const result = await licensesService.listLicenses({
+      ...(req.query as unknown as licensesService.ListLicensesQuery),
+      tenantId: req.tenantId as string,
+    });
+    res.status(200).json(result);
+  } catch (err) {
+    next(err);
+  }
+}
+
 export async function activateLicenseHandler(req: Request, res: Response, next: NextFunction): Promise<void> {
   try {
     const license = await licensesService.activateLicense(req.params.id, req.user!.id);

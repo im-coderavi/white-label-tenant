@@ -14,6 +14,10 @@ vi.mock('../../api/customerOrders', () => ({
   createCheckout: vi.fn(),
   confirmPayment: vi.fn(),
 }));
+vi.mock('../../lib/api', async () => {
+  const actual = await vi.importActual<typeof import('../../lib/api')>('../../lib/api');
+  return { ...actual, apiGet: vi.fn().mockResolvedValue({ store: null }), apiPost: vi.fn() };
+});
 
 function renderPage() {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -51,7 +55,7 @@ describe('StorefrontPage', () => {
     renderPage();
 
     expect(await screen.findByText('Super Tool')).toBeInTheDocument();
-    expect(screen.getByText('180 INR')).toBeInTheDocument();
+    expect(screen.getByText('₹180')).toBeInTheDocument();
     expect(screen.getByText('Featured')).toBeInTheDocument();
   });
 
@@ -66,7 +70,7 @@ describe('StorefrontPage', () => {
     renderPage();
 
     await screen.findByText('Super Tool');
-    await userEvent.click(screen.getByRole('button', { name: 'Buy' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Instant Access' }));
 
     expect(await screen.findByText('Order confirmation placeholder')).toBeInTheDocument();
     expect(customerOrdersApi.createCheckout).toHaveBeenCalledWith('p1');
@@ -78,7 +82,7 @@ describe('StorefrontPage', () => {
     renderPage();
 
     await screen.findByText('Super Tool');
-    await userEvent.click(screen.getByRole('button', { name: 'Buy' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Instant Access' }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Could not start checkout. Please try again.');
   });

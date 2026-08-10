@@ -1,4 +1,4 @@
-import { ResellerProduct, ResellerProductDocument } from '../../models/ResellerProduct';
+import { ResellerProduct, ResellerProductDocument, ResellerProductOverrides } from '../../models/ResellerProduct';
 import { ProductDocument } from '../../models/Product';
 import { NotFoundError, ValidationError } from '../../common/errors';
 
@@ -10,6 +10,8 @@ export interface CatalogItemView {
   customPrice: number | null;
   discountPercent: number | null;
   isFeatured: boolean;
+  sortOrder: number;
+  overrides: ResellerProductOverrides;
 }
 
 interface PopulatedRow {
@@ -18,6 +20,8 @@ interface PopulatedRow {
   customPrice: number | null;
   discountPercent: number | null;
   isFeatured: boolean;
+  sortOrder: number;
+  overrides: ResellerProductOverrides;
   productId: ProductDocument;
 }
 
@@ -37,6 +41,8 @@ function toView(row: PopulatedRow): CatalogItemView {
     customPrice: row.customPrice,
     discountPercent: row.discountPercent,
     isFeatured: row.isFeatured,
+    sortOrder: row.sortOrder ?? 0,
+    overrides: row.overrides ?? {},
   };
 }
 
@@ -56,6 +62,8 @@ export async function updateCatalogItem(
     customPrice?: number;
     discountPercent?: number;
     isFeatured?: boolean;
+    sortOrder?: number;
+    overrides?: ResellerProductOverrides;
   }
 ): Promise<CatalogItemView> {
   const row = await ResellerProduct.findOne({ _id: resellerProductId, tenantId }).populate<{
@@ -86,6 +94,16 @@ export async function updateCatalogItem(
 
   if (input.isFeatured !== undefined) {
     row.isFeatured = input.isFeatured;
+  }
+
+  if (input.sortOrder !== undefined) {
+    row.sortOrder = input.sortOrder;
+  }
+
+  if (input.overrides !== undefined) {
+    // Only the display-layer fields a reseller is allowed to touch — name/category/type/license
+    // system/files stay on the locked master Product and are never written here.
+    row.overrides = { ...row.overrides, ...input.overrides };
   }
 
   await row.save();

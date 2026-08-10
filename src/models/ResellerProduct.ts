@@ -1,5 +1,17 @@
 import { Schema, model, Document, Types } from 'mongoose';
 
+/**
+ * Reseller-owned overrides layered on top of a locked master Product — the reseller cannot touch
+ * name/category/type/license system/files (those stay admin-controlled on the Product itself),
+ * only how the product is presented and priced on their own storefront.
+ */
+export interface ResellerProductOverrides {
+  displayName?: string;
+  shortDescription?: string;
+  description?: string;
+  thumbnailUrl?: string;
+}
+
 export interface ResellerProductDocument extends Document {
   tenantId: Types.ObjectId;
   productId: Types.ObjectId;
@@ -8,6 +20,8 @@ export interface ResellerProductDocument extends Document {
   discountPercent: number | null;
   isFeatured: boolean;
   categoryId: Types.ObjectId | null;
+  sortOrder: number;
+  overrides: ResellerProductOverrides;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -21,6 +35,8 @@ const resellerProductSchema = new Schema<ResellerProductDocument>(
     discountPercent: { type: Number, default: null },
     isFeatured: { type: Boolean, default: false },
     categoryId: { type: Schema.Types.ObjectId, default: null },
+    sortOrder: { type: Number, default: 0 },
+    overrides: { type: Schema.Types.Mixed, default: {} },
   },
   { timestamps: true }
 );

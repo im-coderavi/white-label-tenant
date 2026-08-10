@@ -15,6 +15,7 @@ export interface LicenseDocument extends Document {
   tenantId: Types.ObjectId | null;
   orderId: Types.ObjectId | null;
   assignedUserId: Types.ObjectId | null;
+  grantedCustomerId: Types.ObjectId | null;
   key: string;
   status: LicenseStatus;
   activationLimit: number;
@@ -30,6 +31,9 @@ const licenseSchema = new Schema<LicenseDocument>(
     tenantId: { type: Schema.Types.ObjectId, ref: 'Tenant', default: null },
     orderId: { type: Schema.Types.ObjectId, default: null },
     assignedUserId: { type: Schema.Types.ObjectId, ref: 'User', default: null },
+    // Set when a reseller manually grants a license to a CRM-style ResellerCustomer (not a
+    // logged-in platform User) via the Grant Product Access tool — distinct from assignedUserId.
+    grantedCustomerId: { type: Schema.Types.ObjectId, ref: 'ResellerCustomer', default: null },
     key: { type: String, required: true, unique: true },
     status: {
       type: String,

@@ -7,6 +7,10 @@ jest.mock('cloudinary', () => ({
   },
 }));
 
+jest.mock('../../src/config/env', () => ({
+  env: { ...jest.requireActual('../../src/config/env').env, STORAGE_DRIVER: 'cloudinary' },
+}));
+
 import { v2 as cloudinary } from 'cloudinary';
 import { uploadBuffer } from '../../src/common/cloudinary';
 
